@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Save, Building, DollarSign, Users } from 'lucide-react';
+import { Save, Building, DollarSign, Users, Edit, Trash2, Image } from 'lucide-react';
 import { apiService } from '../../lib/api';
 import { showSuccessAlert, showConfirmAlert, showErrorAlert } from '../../lib/sweetalert';
+import { ClassForm } from './ClassForm';
 
 interface NurserySettings {
   _id: string;
@@ -12,12 +13,16 @@ interface NurserySettings {
   nomDirectrice: string;
   fraisInscription: number;
   mensualite: number;
+  logo?: string;
 }
 
 interface Class {
   _id: string;
   nom: string;
   capacite: number;
+  ageMin?: number;
+  ageMax?: number;
+  description?: string;
 }
 
 export function Settings() {
@@ -25,6 +30,8 @@ export function Settings() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isClassFormOpen, setIsClassFormOpen] = useState(false);
+  const [classToEdit, setClassToEdit] = useState<Class | null>(null);
 
   useEffect(() => {
     loadSettings();
@@ -33,8 +40,25 @@ export function Settings() {
 
   const loadSettings = async () => {
     try {
-      // TODO: Implement settings endpoint
-      // For now, mock data
+      const response = await apiService.getParametres();
+      const data = response.data;
+
+      setSettings({
+        _id: data.creche._id,
+        nomCreche: data.creche.nom,
+        telephone: data.creche.telephone,
+        email: data.creche.email,
+        adresse: data.creche.adresse,
+        nomDirectrice: 'Madame Directrice', // TODO: Add to creche model
+        fraisInscription: data.creche.fraisInscription,
+        mensualite: data.creche.mensualite,
+        logo: data.creche.logo
+      });
+
+      setClasses(data.classes);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      // Fallback to default values
       setSettings({
         _id: '1',
         nomCreche: 'E-Garderie',
@@ -43,10 +67,10 @@ export function Settings() {
         adresse: 'Dakar, Sénégal',
         nomDirectrice: 'Madame Directrice',
         fraisInscription: 50000,
-        mensualite: 150000
+        mensualite: 150000,
+        logo: '/images/logo.png'
       });
-    } catch (error) {
-      console.error('Error loading settings:', error);
+      setClasses([]);
     } finally {
       setLoading(false);
     }
@@ -54,42 +78,53 @@ export function Settings() {
 
   const loadClasses = async () => {
     try {
-      // TODO: Implement classes endpoint
-      setClasses([
-        { _id: '1', nom: 'Petite Section', capacite: 20 },
-        { _id: '2', nom: 'Moyenne Section', capacite: 20 },
-        { _id: '3', nom: 'Grande Section', capacite: 20 }
-      ]);
+      const response = await apiService.getClasses();
+      setClasses(response.data);
     } catch (error) {
       console.error('Error loading classes:', error);
+      setClasses([]);
     }
   };
+
 
   const handleSaveSettings = async () => {
     if (!settings) return;
     setSaving(true);
 
     try {
-      // TODO: Implement save settings endpoint
+      // Always save settings
+      await apiService.updateParametresCreche({
+        nom: settings.nomCreche,
+        adresse: settings.adresse,
+        telephone: settings.telephone,
+        email: settings.email,
+        capaciteMaximale: 100, // TODO: Add to form
+        fraisInscription: settings.fraisInscription,
+        mensualite: settings.mensualite,
+        logo: settings.logo
+      });
+
       showSuccessAlert('Paramètres enregistrés avec succès');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving settings:', error);
-      showErrorAlert('Erreur lors de l\'enregistrement des paramètres');
+      if (error.message?.includes('Session expirée') || error.message?.includes('Utilisateur non authentifié')) {
+        // Don't show error alert for session expiry, user is already redirected
+        return;
+      }
+      showErrorAlert(error.message || 'Erreur lors de l\'enregistrement des paramètres');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleAddClass = async () => {
-    const name = prompt('Nom de la classe:');
-    if (!name) return;
+  const handleAddClass = () => {
+    setClassToEdit(null);
+    setIsClassFormOpen(true);
+  };
 
-    try {
-      // TODO: Implement add class endpoint
-      loadClasses();
-    } catch (error) {
-      console.error('Error adding class:', error);
-    }
+  const handleEditClass = (classItem: Class) => {
+    setClassToEdit(classItem);
+    setIsClassFormOpen(true);
   };
 
   const handleDeleteClass = async (id: string) => {
@@ -103,12 +138,24 @@ export function Settings() {
     if (!confirmed) return;
 
     try {
-      // TODO: Implement delete class endpoint
+      await apiService.deleteClasse(id);
+      showSuccessAlert('Classe supprimée avec succès');
       loadClasses();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting class:', error);
-      showErrorAlert('Erreur lors de la suppression de la classe');
+      showErrorAlert(error.message || 'Erreur lors de la suppression de la classe');
     }
+  };
+
+  const handleClassFormClose = () => {
+    setIsClassFormOpen(false);
+    setClassToEdit(null);
+  };
+
+  const handleClassFormSave = () => {
+    loadClasses();
+    setIsClassFormOpen(false);
+    setClassToEdit(null);
   };
 
   if (loading || !settings) {
@@ -133,6 +180,28 @@ export function Settings() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Logo de la crèche
+            </label>
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                {settings.logo ? (
+                  <img
+                    src={settings.logo}
+                    alt="Logo"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <Image className="w-8 h-8 text-gray-400" />
+                )}
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Logo affiché sur les reçus</p>
+                <p className="text-xs text-gray-500 mt-1">Le logo est géré automatiquement</p>
+              </div>
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Nom de la crèche
@@ -246,16 +315,38 @@ export function Settings() {
             <div key={cls._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
               <div>
                 <p className="font-medium text-gray-900">{cls.nom}</p>
-                <p className="text-sm text-gray-600">Capacité: {cls.capacite} enfants</p>
+                <p className="text-sm text-gray-600">
+                  Capacité: {cls.capacite} enfants • Âge: {cls.ageMin}-{cls.ageMax} ans
+                </p>
+                {cls.description && (
+                  <p className="text-sm text-gray-500 mt-1">{cls.description}</p>
+                )}
               </div>
-              <button
-                onClick={() => handleDeleteClass(cls._id)}
-                className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-              >
-                Supprimer
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleEditClass(cls)}
+                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                  title="Modifier"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => handleDeleteClass(cls._id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                  title="Supprimer"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           ))}
+          {classes.length === 0 && (
+            <div className="text-center py-8">
+              <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">Aucune classe configurée</p>
+              <p className="text-sm text-gray-400 mt-1">Cliquez sur "Ajouter une classe" pour commencer</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -269,6 +360,14 @@ export function Settings() {
           <span className="font-semibold">{saving ? 'Enregistrement...' : 'Enregistrer les paramètres'}</span>
         </button>
       </div>
+
+      {/* Modal du formulaire de classe */}
+      <ClassForm
+        isOpen={isClassFormOpen}
+        onClose={handleClassFormClose}
+        onSave={handleClassFormSave}
+        classToEdit={classToEdit}
+      />
     </div>
   );
 }

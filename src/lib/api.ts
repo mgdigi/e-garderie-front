@@ -128,8 +128,8 @@ class ApiService {
     return this.request('/parents');
   }
 
-  // Classes/Sections methods
-  async getClasses() {
+  // Classes/Sections methods (deprecated - use settings methods instead)
+  async getClassesLegacy() {
     return this.request('/classes');
   }
 
@@ -310,6 +310,42 @@ class ApiService {
     return this.request('/rapports/statistiques-generales');
   }
 
+  // Settings methods
+  async getParametres() {
+    return this.request('/parametres');
+  }
+
+  async updateParametresCreche(data: any) {
+    return this.request('/parametres/creche', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getClasses() {
+    return this.request('/parametres/classes');
+  }
+
+  async createClasse(data: any) {
+    return this.request('/parametres/classes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateClasse(id: string, data: any) {
+    return this.request(`/parametres/classes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteClasse(id: string) {
+    return this.request(`/parametres/classes/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Dashboard methods
   async getDashboardCharts(params?: { periode?: string }) {
     const query = params ? new URLSearchParams(params).toString() : '';
@@ -328,6 +364,7 @@ class ApiService {
       body: JSON.stringify(notificationData),
     });
   }
+
 }
 
 export const apiService = new ApiService(API_BASE_URL);

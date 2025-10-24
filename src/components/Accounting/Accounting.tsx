@@ -145,21 +145,21 @@ export function Accounting() {
     // Create receipt HTML content
     const receiptHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #f97316; margin: 0;">${creche?.nom || 'E-Garderie'}</h1>
-          <p style="margin: 5px 0; color: #666;">${creche?.adresse || 'Dakar, Sénégal'}</p>
-          <p style="margin: 5px 0; color: #666;">${creche?.telephone || '+221 XX XXX XX XX'} | ${creche?.email || 'contact@e-garderie.sn'}</p>
+        <div style="display: flex; align-items: center; margin-bottom: 30px;">
+          <div style="flex-shrink: 0; margin-right: 20px;">
+            <img src="${creche?.logo ? `http://localhost:4000${creche.logo}` : '/images/logo.png'}" alt="Logo" style="width: 80px; height: 80px; object-fit: contain;" />
+          </div>
+          <div style="text-align: left;">
+            <h1 style="color: #f97316; margin: 0; font-size: 24px;">${creche?.nom || 'E-Garderie'}</h1>
+            <p style="margin: 5px 0; color: #666;">${creche?.adresse || 'Dakar, Sénégal'}</p>
+            <p style="margin: 5px 0; color: #666;">${creche?.telephone || '+221 XX XXX XX XX'}</p>
+            <p style="margin: 5px 0; color: #666;">${creche?.email || 'contact@e-garderie.sn'}</p>
+          </div>
         </div>
 
         <div style="border-bottom: 2px solid #f97316; margin-bottom: 20px;"></div>
 
         <h2 style="text-align: center; color: #333; margin-bottom: 30px;">REÇU DE PAIEMENT</h2>
-
-        <div style="margin-bottom: 20px;">
-          <p><strong>Référence:</strong> ${paiement.reference || `REC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`}</p>
-          <p><strong>Date de paiement:</strong> ${new Date(paiement.date).toLocaleDateString('fr-FR')}</p>
-          <p><strong>Validé le:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
-        </div>
 
         ${enfant ? `
         <div style="background: #f9f9f9; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
@@ -172,8 +172,6 @@ export function Accounting() {
         <div style="background: #f0f8ff; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
           <h3 style="margin: 0 0 10px 0; color: #333;">Détails du paiement</h3>
           <p style="margin: 5px 0;"><strong>Description:</strong> ${paiement.description}</p>
-          <p style="margin: 5px 0;"><strong>Type:</strong> ${paiement.type === 'RECETTE' ? 'Recette' : 'Dépense'}</p>
-          <p style="margin: 5px 0;"><strong>Catégorie:</strong> ${paiement.categorie?.replace('_', ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase()) || paiement.categorie}</p>
           <p style="margin: 5px 0;"><strong>Méthode de paiement:</strong> ${paiement.methodePaiement}</p>
           <p style="margin: 5px 0; font-size: 18px; font-weight: bold; color: #f97316;">
             <strong>Montant:</strong> ${paiement.montantPaye?.toLocaleString('fr-FR') || paiement.montant.toLocaleString('fr-FR')} XAF
@@ -181,14 +179,15 @@ export function Accounting() {
         </div>
 
         <div style="margin-bottom: 30px;">
-          <p><strong>Statut:</strong> <span style="color: #22c55e; font-weight: bold;">PAYÉ ET VALIDÉ</span></p>
-          <p><strong>Validé par:</strong> ${validePar.firstName} ${validePar.lastName}</p>
+          <p><strong>Date de paiement:</strong> ${new Date(paiement.date).toLocaleDateString('fr-FR')}</p>
+          <p><strong>Référence:</strong> ${paiement.reference || `REC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`}</p>
         </div>
 
         <div style="border-top: 1px solid #ccc; padding-top: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p style="margin-bottom: 10px;"><strong>${creche?.nom || 'E-Garderie'}</strong></p>
+          <p style="margin-bottom: 5px;">${creche?.email || 'contact@e-garderie.sn'}</p>
           <p>Ce reçu est généré automatiquement et fait office de justificatif officiel de paiement.</p>
           <p>Conservez-le précieusement pour vos archives comptables.</p>
-          <p style="margin-top: 10px; font-style: italic;">Merci pour votre confiance - E-Garderie</p>
         </div>
       </div>
     `;

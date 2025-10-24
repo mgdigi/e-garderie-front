@@ -28,44 +28,49 @@ interface Sante {
 }
 
 interface Child {
-  _id: string;
-  nom: string;
-  prenom: string;
-  dateNaissance: string;
-  sexe: string;
-  section: string;
-  statut: string;
-  dateInscription: string;
-  tarifMensuel: number;
-  fraisInscription?: number;
-  parents: Parent[];
-  sante: Sante;
-  remarques?: string;
+   _id: string;
+   nom: string;
+   prenom: string;
+   dateNaissance: string;
+   sexe: string;
+   classeId?: string;
+   section?: string; // Pour compatibilité
+   statut: string;
+   dateInscription: string;
+   tarifMensuel: number;
+   fraisInscription?: number;
+   parents: Parent[];
+   sante: Sante;
+   remarques?: string;
 }
 
 interface Class {
   _id: string;
   nom: string;
   capacite: number;
+  ageMin?: number;
+  ageMax?: number;
+  description?: string;
 }
 
 interface ChildFormProps {
   child: Child | null;
   classes: Class[];
+  settings: any;
   onClose: () => void;
   onSave: () => void;
 }
 
-export function ChildForm({ child, classes, onClose, onSave }: ChildFormProps) {
+export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFormProps) {
    const [formData, setFormData] = useState({
       nom: '',
       prenom: '',
       dateNaissance: '',
       sexe: 'M',
-      section: '',
+      classeId: '',
       statut: 'ACTIF',
       dateInscription: new Date().toISOString().split('T')[0],
-      fraisInscription: 50000 // Valeur par défaut
+      fraisInscription: settings?.fraisInscription || 50000
     });
 
    const [parentData, setParentData] = useState({
@@ -89,15 +94,15 @@ export function ChildForm({ child, classes, onClose, onSave }: ChildFormProps) {
   useEffect(() => {
       if (child) {
         setFormData({
-          nom: child.nom,
-          prenom: child.prenom,
-          dateNaissance: child.dateNaissance ? child.dateNaissance.split('T')[0] : '',
-          sexe: child.sexe === 'MASCULIN' ? 'M' : 'F',
-          section: child.section || '',
-          statut: child.statut,
-          dateInscription: child.dateInscription ? child.dateInscription.split('T')[0] : new Date().toISOString().split('T')[0],
-          fraisInscription: child.fraisInscription || 50000
-        });
+           nom: child.nom,
+           prenom: child.prenom,
+           dateNaissance: child.dateNaissance ? child.dateNaissance.split('T')[0] : '',
+           sexe: child.sexe === 'MASCULIN' ? 'M' : 'F',
+           classeId: child.classeId || '',
+           statut: child.statut,
+           dateInscription: child.dateInscription ? child.dateInscription.split('T')[0] : new Date().toISOString().split('T')[0],
+           fraisInscription: child.fraisInscription || settings?.fraisInscription || 50000
+         });
         loadChildData(child._id);
       }
     }, [child]);
@@ -174,6 +179,7 @@ export function ChildForm({ child, classes, onClose, onSave }: ChildFormProps) {
      try {
        const childData = {
          ...formData,
+         classeId: formData.classeId,
          parentNom: parentData.first_name,
          parentTelephone: parentData.phone,
          adresse: parentData.address,
@@ -290,17 +296,20 @@ export function ChildForm({ child, classes, onClose, onSave }: ChildFormProps) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Section
+                  Classe
                 </label>
                 <select
-                  value={formData.section}
-                  onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                  value={formData.classeId}
+                  onChange={(e) => setFormData({ ...formData, classeId: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
                 >
-                  <option value="">Sélectionner une section</option>
-                  <option value="BEBES">Bébés (0-2 ans)</option>
-                  <option value="MOYENS">Moyens (2-4 ans)</option>
-                  <option value="GRANDS">Grands (4-6 ans)</option>
+                  <option value="">Sélectionner une classe</option>
+                  {classes.map((cls) => (
+                    <option key={cls._id} value={cls._id}>
+                      {cls.nom} ({cls.ageMin}-{cls.ageMax} ans - {cls.capacite} places)
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>

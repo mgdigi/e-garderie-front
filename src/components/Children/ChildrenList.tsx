@@ -4,50 +4,68 @@ import { apiService } from '../../lib/api';
 import { showConfirmAlert, showErrorAlert, showSuccessAlert } from '../../lib/sweetalert';
 
 interface Child {
-  _id: string;
-  nom: string;
-  prenom: string;
-  dateNaissance: string;
-  sexe: string;
-  section: string;
-  statut: string;
-  dateInscription: string;
-  parents?: Array<{
-    nom: string;
-    prenom: string;
-    telephone: string;
-    adresse: string;
-  }>;
-  sante?: {
-    allergies: string[];
-    restrictionsAlimentaires: string[];
-  };
-  // Keep backward compatibility
-  parentNom?: string;
-  parentTelephone?: string;
-  adresse?: string;
+   _id: string;
+   nom: string;
+   prenom: string;
+   dateNaissance: string;
+   sexe: string;
+   classeId?: {
+     _id: string;
+     nom: string;
+     capacite: number;
+     ageMin?: number;
+     ageMax?: number;
+   } | string;
+   section?: string; // Keep for backward compatibility
+   statut: string;
+   dateInscription: string;
+   parents?: Array<{
+     nom: string;
+     prenom: string;
+     telephone: string;
+     adresse: string;
+   }>;
+   sante?: {
+     allergies: string[];
+     restrictionsAlimentaires: string[];
+   };
+   // Keep backward compatibility
+   parentNom?: string;
+   parentTelephone?: string;
+   adresse?: string;
+   classe?: {
+     _id: string;
+     nom: string;
+     capacite: number;
+     ageMin?: number;
+     ageMax?: number;
+   };
 }
 
 interface Class {
   _id: string;
   nom: string;
   capacite: number;
+  ageMin?: number;
+  ageMax?: number;
+  description?: string;
 }
 
 import { ChildForm } from './ChildForm';
 import { ChildDetails } from './ChildDetails';
 
 export function ChildrenList() {
-  const [children, setChildren] = useState<Child[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showForm, setShowForm] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
-  const [filterClass, setFilterClass] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('active');
+   const [children, setChildren] = useState<Child[]>([]);
+   const [classes, setClasses] = useState<Class[]>([]);
+   const [settings, setSettings] = useState<any>(null);
+   const [loading, setLoading] = useState(true);
+   const [submitting, setSubmitting] = useState(false);
+   const [searchTerm, setSearchTerm] = useState('');
+   const [showForm, setShowForm] = useState(false);
+   const [showDetails, setShowDetails] = useState(false);
+   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
+   const [filterClass, setFilterClass] = useState<string>('all');
+   const [filterStatus, setFilterStatus] = useState<string>('active');
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,6 +74,7 @@ export function ChildrenList() {
   useEffect(() => {
     loadChildren();
     loadClasses();
+    loadSettings();
   }, []);
 
   
@@ -81,15 +100,21 @@ export function ChildrenList() {
 
   const loadClasses = async () => {
     try {
-     
-      setClasses([
-        { _id: '1', nom: 'Petite Section', capacite: 20 },
-        { _id: '2', nom: 'Moyenne Section', capacite: 25 },
-        { _id: '3', nom: 'Grande Section', capacite: 30 }
-      ]);
+      const response = await apiService.getClasses();
+      setClasses(response.data);
     } catch (error) {
       console.error('Error loading classes:', error);
       setClasses([]);
+    }
+  };
+
+  const loadSettings = async () => {
+    try {
+      const response = await apiService.getParametres();
+      setSettings(response.data);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      setSettings(null);
     }
   };
 
@@ -120,7 +145,8 @@ export function ChildrenList() {
     const matchesSearch =
       child.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
       child.prenom.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesClass = filterClass === 'all' || child.section === filterClass;
+    const childClassId = typeof child.classeId === 'object' ? child.classeId?._id : child.classeId;
+    const matchesClass = filterClass === 'all' || childClassId === filterClass;
     const matchesStatus = filterStatus === 'all' ||
       (filterStatus === 'active' && child.statut === 'ACTIF') ||
       (filterStatus === 'inactive' && child.statut === 'INACTIF');
@@ -180,10 +206,12 @@ export function ChildrenList() {
             onChange={(e) => setFilterClass(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">Toutes les sections</option>
-            <option value="BEBES">Bébés (0-2 ans)</option>
-            <option value="MOYENS">Moyens (2-4 ans)</option>
-            <option value="GRANDS">Grands (4-6 ans)</option>
+            <option value="all">Toutes les classes</option>
+            {classes.map((cls) => (
+              <option key={cls._id} value={cls._id}>
+                {cls.nom} ({cls.ageMin}-{cls.ageMax} ans)
+              </option>
+            ))}
           </select>
           <select
             value={filterStatus}
@@ -230,10 +258,8 @@ export function ChildrenList() {
                   </td>
                   <td className="py-4 px-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700">
-                      {child.section === 'BEBES' ? 'Bébés (0-2 ans)' :
-                       child.section === 'MOYENS' ? 'Moyens (2-4 ans)' :
-                       child.section === 'GRANDS' ? 'Grands (4-6 ans)' :
-                       child.section || 'Non assigné'}
+                      {typeof child.classeId === 'object' && child.classeId?.nom ? child.classeId.nom :
+                       child.classe?.nom || child.section || 'Non assigné'}
                     </span>
                   </td>
                   <td className="py-4 px-4">
@@ -343,17 +369,18 @@ export function ChildrenList() {
         <ChildForm
            child={selectedChild as any}
            classes={classes as any}
+           settings={settings}
            onClose={() => {
              setShowForm(false);
              setSelectedChild(null);
            }}
            onSave={() => {
-             loadChildren(); 
+             loadChildren();
              setShowForm(false);
              setSelectedChild(null);
            }}
          />
-      )}
+       )}
 
       {showDetails && selectedChild && (
         <ChildDetails

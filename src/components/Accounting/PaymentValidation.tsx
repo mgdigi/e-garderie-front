@@ -29,10 +29,21 @@ export function PaymentValidation({ onPaymentValidated }: PaymentValidationProps
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [creche, setCreche] = useState<any>(null);
 
   useEffect(() => {
     loadPayments();
+    loadCrecheInfo();
   }, []);
+
+  const loadCrecheInfo = async () => {
+    try {
+      const response = await apiService.getParametres();
+      setCreche(response.data.creche);
+    } catch (error) {
+      console.error('Error loading creche info:', error);
+    }
+  };
 
   const loadPayments = async () => {
     try {
@@ -97,21 +108,21 @@ export function PaymentValidation({ onPaymentValidated }: PaymentValidationProps
     // Create receipt HTML content
     const receiptHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #f97316; margin: 0;">${creche.nom || 'E-Garderie'}</h1>
-          <p style="margin: 5px 0; color: #666;">${creche.adresse || 'Dakar, Sénégal'}</p>
-          <p style="margin: 5px 0; color: #666;">${creche.telephone || '+221 XX XXX XX XX'} | ${creche.email || 'contact@e-garderie.sn'}</p>
+        <div style="display: flex; align-items: center; margin-bottom: 30px;">
+          <div style="flex-shrink: 0; margin-right: 20px;">
+            <img src="${creche?.logo ? `http://localhost:4000${creche.logo}` : '/images/logo.png'}" alt="Logo" style="width: 80px; height: 80px; object-fit: contain;" />
+          </div>
+          <div style="text-align: left;">
+            <h1 style="color: #f97316; margin: 0; font-size: 24px;">${creche.nom || 'E-Garderie'}</h1>
+            <p style="margin: 5px 0; color: #666;">${creche.adresse || 'Dakar, Sénégal'}</p>
+            <p style="margin: 5px 0; color: #666;">${creche.telephone || '+221 XX XXX XX XX'}</p>
+            <p style="margin: 5px 0; color: #666;">${creche.email || 'contact@e-garderie.sn'}</p>
+          </div>
         </div>
 
         <div style="border-bottom: 2px solid #f97316; margin-bottom: 20px;"></div>
 
         <h2 style="text-align: center; color: #333; margin-bottom: 30px;">REÇU DE PAIEMENT</h2>
-
-        <div style="margin-bottom: 20px;">
-          <p><strong>Référence:</strong> ${paiement.reference || `REC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`}</p>
-          <p><strong>Date de paiement:</strong> ${new Date(paiement.date).toLocaleDateString('fr-FR')}</p>
-          <p><strong>Validé le:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
-        </div>
 
         ${enfant ? `
         <div style="background: #f9f9f9; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
@@ -124,8 +135,6 @@ export function PaymentValidation({ onPaymentValidated }: PaymentValidationProps
         <div style="background: #f0f8ff; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
           <h3 style="margin: 0 0 10px 0; color: #333;">Détails du paiement</h3>
           <p style="margin: 5px 0;"><strong>Description:</strong> ${paiement.description}</p>
-          <p style="margin: 5px 0;"><strong>Type:</strong> ${paiement.type === 'RECETTE' ? 'Recette' : 'Dépense'}</p>
-          <p style="margin: 5px 0;"><strong>Catégorie:</strong> ${paiement.categorie?.replace('_', ' ').toLowerCase().replace(/\b\w/g, (l: string) => l.toUpperCase()) || paiement.categorie}</p>
           <p style="margin: 5px 0;"><strong>Méthode de paiement:</strong> ${paiement.methodePaiement}</p>
           <p style="margin: 5px 0; font-size: 18px; font-weight: bold; color: #f97316;">
             <strong>Montant:</strong> ${paiement.montantPaye?.toLocaleString('fr-FR') || paiement.montant.toLocaleString('fr-FR')} XAF
@@ -133,14 +142,15 @@ export function PaymentValidation({ onPaymentValidated }: PaymentValidationProps
         </div>
 
         <div style="margin-bottom: 30px;">
-          <p><strong>Statut:</strong> <span style="color: #22c55e; font-weight: bold;">PAYÉ ET VALIDÉ</span></p>
-          <p><strong>Validé par:</strong> ${validePar.firstName} ${validePar.lastName}</p>
+          <p><strong>Date de paiement:</strong> ${new Date(paiement.date).toLocaleDateString('fr-FR')}</p>
+          <p><strong>Référence:</strong> ${paiement.reference || `REC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`}</p>
         </div>
 
         <div style="border-top: 1px solid #ccc; padding-top: 20px; text-align: center; color: #666; font-size: 12px;">
+          <p style="margin-bottom: 10px;"><strong>${creche.nom || 'E-Garderie'}</strong></p>
+          <p style="margin-bottom: 5px;">${creche.email || 'contact@e-garderie.sn'}</p>
           <p>Ce reçu est généré automatiquement et fait office de justificatif officiel de paiement.</p>
           <p>Conservez-le précieusement pour vos archives comptables.</p>
-          <p style="margin-top: 10px; font-style: italic;">Merci pour votre confiance - E-Garderie</p>
         </div>
       </div>
     `;
@@ -326,26 +336,21 @@ export function PaymentValidation({ onPaymentValidated }: PaymentValidationProps
             <div className="space-y-6">
               {/* Receipt Preview */}
               <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                <div className="text-center mb-6">
-                  <h1 className="text-2xl font-bold text-orange-600 mb-2">E-Garderie</h1>
-                  <p className="text-gray-600">Dakar, Sénégal</p>
-                  <p className="text-gray-600">+221 XX XXX XX XX | contact@e-garderie.sn</p>
+                <div className="flex items-center mb-6">
+                  <div className="flex-shrink-0 mr-4">
+                    <img src={creche?.logo ? `http://localhost:4000${creche.logo}` : '/images/logo.png'} alt="Logo" className="w-16 h-16 object-contain" />
+                  </div>
+                  <div className="text-left">
+                    <h1 className="text-2xl font-bold text-orange-600 mb-1">{creche?.nom || 'E-Garderie'}</h1>
+                    <p className="text-gray-600 text-sm">{creche?.adresse || 'Dakar, Sénégal'}</p>
+                    <p className="text-gray-600 text-sm">{creche?.telephone || '+221 XX XXX XX XX'}</p>
+                    <p className="text-gray-600 text-sm">{creche?.email || 'contact@e-garderie.sn'}</p>
+                  </div>
                 </div>
 
                 <div className="border-b-2 border-orange-500 mb-4"></div>
 
                 <h2 className="text-xl font-bold text-center text-gray-800 mb-6">REÇU DE PAIEMENT</h2>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <p><strong>Référence:</strong> {selectedPayment.reference || `REC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`}</p>
-                    <p><strong>Date de paiement:</strong> {new Date(selectedPayment.date).toLocaleDateString('fr-FR')}</p>
-                  </div>
-                  <div>
-                    <p><strong>Validé le:</strong> {new Date().toLocaleDateString('fr-FR')}</p>
-                    <p><strong>Statut:</strong> <span className="text-green-600 font-bold">PAYÉ ET VALIDÉ</span></p>
-                  </div>
-                </div>
 
                 {selectedPayment.enfantId && (
                   <div className="bg-blue-50 p-4 rounded-lg mb-4">
@@ -358,14 +363,19 @@ export function PaymentValidation({ onPaymentValidated }: PaymentValidationProps
                 <div className="bg-green-50 p-4 rounded-lg mb-4">
                   <h3 className="font-bold text-gray-800 mb-2">Détails du paiement</h3>
                   <p><strong>Description:</strong> {selectedPayment.description}</p>
-                  <p><strong>Type:</strong> {selectedPayment.type === 'RECETTE' ? 'Recette' : 'Dépense'}</p>
-                  <p><strong>Catégorie:</strong> {selectedPayment.categorie?.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) || selectedPayment.categorie}</p>
                   <p><strong>Méthode de paiement:</strong> {selectedPayment.methodePaiement}</p>
                   <p className="text-lg font-bold text-orange-600"><strong>Montant:</strong> {selectedPayment.montant.toLocaleString()} XAF</p>
                 </div>
 
-                <div className="text-center text-sm text-gray-600 mt-6">
-                  <p>Ce reçu est généré automatiquement et fait office de justificatif officiel.</p>
+                <div className="mb-6">
+                  <p><strong>Date de paiement:</strong> {new Date(selectedPayment.date).toLocaleDateString('fr-FR')}</p>
+                  <p><strong>Référence:</strong> {selectedPayment.reference || `REC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`}</p>
+                </div>
+
+                <div className="border-t border-gray-300 pt-4 text-center text-sm text-gray-600">
+                  <p className="font-bold mb-2">{creche?.nom || 'E-Garderie'}</p>
+                  <p className="mb-1">{creche?.email || 'contact@e-garderie.sn'}</p>
+                  <p>Ce reçu est généré automatiquement et fait office de justificatif officiel de paiement.</p>
                   <p>Conservez-le précieusement pour vos archives comptables.</p>
                 </div>
               </div>
