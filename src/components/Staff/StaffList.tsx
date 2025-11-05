@@ -27,16 +27,41 @@ export function StaffList() {
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [showStaffDetails, setShowStaffDetails] = useState(false);
   const [editingStaff, setEditingStaff] = useState<Staff | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage] = useState(8);
 
   useEffect(() => {
-    loadStaff();
+    loadStaff(1); // Reset to first page when component mounts
   }, []);
 
-  const loadStaff = async () => {
+  useEffect(() => {
+    // Reload staff when search term changes
+    const timeoutId = setTimeout(() => {
+      loadStaff(1); // Reset to first page when searching
+    }, 300); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const loadStaff = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await apiService.getStaff();
+      console.log('Loading staff for StaffList with page:', page);
+      const response = await apiService.getStaff({
+        
+
+        page,
+        limit: itemsPerPage,
+        search: searchTerm || undefined
+      });
+      console.log('StaffList response:', response);
+      console.log('Staff data:', response.data);
       setStaff(response.data || []);
+      setTotalPages(response.pagination?.totalPages || 1);
+      setTotalItems(response.pagination?.totalItems || 0);
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error loading staff:', error);
       setStaff([]);
@@ -59,7 +84,7 @@ export function StaffList() {
     try {
       await apiService.deleteStaff(id);
       showSuccessAlert('Employé supprimé avec succès');
-      loadStaff();
+      loadStaff(currentPage); // Reload current page
     } catch (error: any) {
       console.error('Error deleting staff:', error);
       showErrorAlert(error.message || 'Erreur lors de la suppression de l\'employé');
@@ -68,9 +93,14 @@ export function StaffList() {
     }
   };
 
-  const filteredStaff = (staff || []).filter(s =>
-    `${s.nom} ${s.prenom}`.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      loadStaff(page);
+    }
+  };
+
+  // Remove client-side filtering since we now use server-side search
+  const filteredStaff = staff || [];
 
   if (loading) {
     return <div className="flex items-center justify-center h-96">
@@ -83,7 +113,7 @@ export function StaffList() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Gestion du personnel</h2>
-          <p className="text-gray-600 mt-1">{filteredStaff.length} employé(s)</p>
+          <p className="text-gray-600 mt-1">{totalItems} employé(s)</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -105,6 +135,34 @@ export function StaffList() {
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
           />
         </div>
+
+        {/* Pagination controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg mb-4">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Précédent
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {currentPage} sur {totalPages}
+              </span>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Suivant
+              </button>
+            </div>
+            <div className="text-sm text-gray-500">
+              {totalItems} élément(s) au total
+            </div>
+          </div>
+        )}
 
         <div className="overflow-x-auto">
           <table className="w-full">

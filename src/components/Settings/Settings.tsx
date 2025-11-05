@@ -12,7 +12,7 @@ interface NurserySettings {
   adresse: string;
   nomDirectrice: string;
   fraisInscription: number;
-  mensualite: number;
+  tarifMensuel: number;
   logo?: string;
 }
 
@@ -51,7 +51,7 @@ export function Settings() {
         adresse: data.creche.adresse,
         nomDirectrice: 'Madame Directrice', // TODO: Add to creche model
         fraisInscription: data.creche.fraisInscription,
-        mensualite: data.creche.mensualite,
+        tarifMensuel: data.creche.tarifMensuel,
         logo: data.creche.logo
       });
 
@@ -67,7 +67,7 @@ export function Settings() {
         adresse: 'Dakar, Sénégal',
         nomDirectrice: 'Madame Directrice',
         fraisInscription: 50000,
-        mensualite: 150000,
+        tarifMensuel: 150000,
         logo: '/images/logo.png'
       });
       setClasses([]);
@@ -100,7 +100,7 @@ export function Settings() {
         email: settings.email,
         capaciteMaximale: 100, // TODO: Add to form
         fraisInscription: settings.fraisInscription,
-        mensualite: settings.mensualite,
+        mensualite: settings.tarifMensuel,
         logo: settings.logo
       });
 
@@ -282,12 +282,12 @@ export function Settings() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mensualité (XAF)
+              Tarif mensuel (XAF)
             </label>
             <input
               type="number"
-              value={settings.mensualite}
-              onChange={(e) => setSettings({ ...settings, mensualite: Number(e.target.value) })}
+              value={settings.tarifMensuel}
+              onChange={(e) => setSettings({ ...settings, tarifMensuel: Number(e.target.value) })}
               className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500"
             />
           </div>

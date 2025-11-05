@@ -70,7 +70,8 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
       classeId: '',
       statut: 'ACTIF',
       dateInscription: new Date().toISOString().split('T')[0],
-      fraisInscription: settings?.fraisInscription || 50000
+      fraisInscription: settings?.fraisInscription || 50000,
+      tarifMensuel: settings?.tarifMensuel || 150000
     });
 
    const [parentData, setParentData] = useState({
@@ -101,7 +102,8 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
            classeId: child.classeId || '',
            statut: child.statut,
            dateInscription: child.dateInscription ? child.dateInscription.split('T')[0] : new Date().toISOString().split('T')[0],
-           fraisInscription: child.fraisInscription || settings?.fraisInscription || 50000
+           fraisInscription: child.fraisInscription || settings?.fraisInscription || 50000,
+           tarifMensuel: child.tarifMensuel || settings?.tarifMensuel || 150000
          });
         loadChildData(child._id);
       }
@@ -184,6 +186,7 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
          parentTelephone: parentData.phone,
          adresse: parentData.address,
          fraisInscription: formData.fraisInscription,
+         tarifMensuel: formData.tarifMensuel,
          allergies: healthData.allergies,
          restrictionsAlimentaires: healthData.dietary_restrictions,
          remarquesMedicales: healthData.medical_notes,
@@ -412,6 +415,19 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
                   type="number"
                   value={formData.fraisInscription}
                   onChange={(e) => setFormData({ ...formData, fraisInscription: parseInt(e.target.value) || 0 })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  min="0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tarif mensuel (FCFA) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  value={formData.tarifMensuel}
+                  onChange={(e) => setFormData({ ...formData, tarifMensuel: parseInt(e.target.value) || 0 })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   min="0"
                 />

@@ -25,7 +25,6 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        // Handle specific error codes with detailed messages
         if (response.status === 400) {
           throw new Error(data.message || 'Données invalides. Veuillez vérifier vos informations.');
         }
@@ -134,8 +133,19 @@ class ApiService {
   }
 
   // Staff methods
-  async getStaff() {
-    return this.request('/personnel');
+  async getStaff(params?: { page?: number; limit?: number; statut?: string; poste?: string; search?: string }) {
+    // Remove undefined values from params
+    const cleanParams = Object.fromEntries(
+      Object.entries(params || {}).filter(([_, value]) => value !== undefined && value !== '')
+    );
+    const query = Object.keys(cleanParams).length > 0 ? new URLSearchParams(cleanParams as any).toString() : '';
+    const url = `/personnel${query ? `?${query}` : ''}`;
+    console.log('API call to:', url, 'with params:', cleanParams);
+    return this.request(url);
+  }
+
+  async getAllStaff() {
+    return this.request('/personnel?limit=1000'); // Récupérer beaucoup pour couvrir tous les cas
   }
 
   async getStaffById(id: string) {

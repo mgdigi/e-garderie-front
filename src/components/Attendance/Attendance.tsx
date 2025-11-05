@@ -107,7 +107,7 @@ export function Attendance() {
 
   const loadStaff = async () => {
     try {
-      const response = await apiService.getStaff();
+      const response = await apiService.getAllStaff();
       // Filter only active staff
       const activeStaff = (response.data || []).filter((person: any) => person.statut === 'ACTIF');
       setStaff(activeStaff);
@@ -237,6 +237,7 @@ export function Attendance() {
     }
   };
 
+
   const sendParentNotification = async (childId: string, type: 'arrival' | 'departure', time: string) => {
     try {
       // Appeler l'API backend pour envoyer la notification
@@ -261,6 +262,7 @@ export function Attendance() {
   const currentList = view === 'children' ? children.flatMap(group => group.children) : staff;
   const presentCount = Object.values(attendance).filter(a => a.statut === 'PRESENT').length;
   const absentCount = Object.values(attendance).filter(a => a.statut === 'ABSENT').length;
+
 
   if (loading) {
     return <div className="flex items-center justify-center h-96">
@@ -357,8 +359,9 @@ export function Attendance() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
           Gerer les presences  des {view === 'children' ? 'enfants' : 'personnels'}
         </h3>
-        <div className="space-y-6 max-h-96 overflow-y-auto">
-          {view === 'children' ? (
+        <div className="space-y-6">
+          <div className="max-h-96 overflow-y-auto">
+            {view === 'children' ? (
             // Affichage groupé par classe pour les enfants avec accordéon
             children.map((classGroup) => {
               const isExpanded = expandedClasses[classGroup.classId] ?? true; // Par défaut ouvert
@@ -607,6 +610,7 @@ export function Attendance() {
               </div>
             )
           )}
+          </div>
         </div>
       </div>
     </div>
