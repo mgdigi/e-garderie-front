@@ -99,7 +99,7 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
            prenom: child.prenom,
            dateNaissance: child.dateNaissance ? child.dateNaissance.split('T')[0] : '',
            sexe: child.sexe === 'MASCULIN' ? 'M' : 'F',
-           classeId: child.classeId || '',
+           classeId: typeof child.classeId === 'object' && child.classeId ? (child.classeId as any)._id : child.classeId || '',
            statut: child.statut,
            dateInscription: child.dateInscription ? child.dateInscription.split('T')[0] : new Date().toISOString().split('T')[0],
            fraisInscription: child.fraisInscription || settings?.fraisInscription || 50000,
@@ -111,68 +111,68 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
 
 
   const loadChildData = async (childId: string) => {
-     try {
-       // Get full child details from API to load parent and health data
-       const childResponse = await apiService.getChild(childId);
-       const fullChild = childResponse.data;
+      try {
+        const childResponse = await apiService.getChild(childId);
+        const fullChild = childResponse.data;
 
-       // Load parent data - take the first parent or create empty if none
-       if (fullChild.parents && fullChild.parents.length > 0) {
-         const firstParent = fullChild.parents[0];
-         setParentData({
-           relationship: firstParent.relation.toLowerCase(),
-           first_name: firstParent.nom || '',
-           last_name: firstParent.prenom || '',
-           phone: firstParent.telephone || '',
-           email: firstParent.email || '',
-           address: firstParent.adresse || '',
-           profession: firstParent.profession || ''
-         });
-       } else {
-         setParentData({
-           relationship: 'pere',
-           first_name: '',
-           last_name: '',
-           phone: '',
-           email: '',
-           address: '',
-           profession: ''
-         });
-       }
+        console.log('Full child data loaded:', fullChild);
 
-       // Load health data
-       if (fullChild.sante) {
-         setHealthData({
-           allergies: fullChild.sante.allergies ? fullChild.sante.allergies.join(', ') : '',
-           dietary_restrictions: fullChild.sante.restrictionsAlimentaires ? fullChild.sante.restrictionsAlimentaires.join(', ') : '',
-           medical_notes: fullChild.sante.remarquesMedicales || ''
-         });
-       } else {
-         setHealthData({
-           allergies: '',
-           dietary_restrictions: '',
-           medical_notes: ''
-         });
-       }
-     } catch (error) {
-       console.error('Error loading child data:', error);
-       // Set default values if loading fails
-       setParentData({
-         relationship: 'pere',
-         first_name: '',
-         last_name: '',
-         phone: '',
-         email: '',
-         address: '',
-         profession: ''
-       });
-       setHealthData({
-         allergies: '',
-         dietary_restrictions: '',
-         medical_notes: ''
-       });
-     }
-   };
+        if (fullChild.parents && fullChild.parents.length > 0) {
+          const firstParent = fullChild.parents[0];
+          console.log('First parent data:', firstParent);
+          setParentData({
+            relationship: firstParent.relation ? firstParent.relation.toLowerCase() : 'pere',
+            first_name: firstParent.nom || '',
+            last_name: firstParent.prenom || '',
+            phone: firstParent.telephone || '',
+            email: firstParent.email || '',
+            address: firstParent.adresse || '',
+            profession: firstParent.profession || ''
+          });
+        } else {
+          console.log('No parent data found, setting defaults');
+          setParentData({
+            relationship: 'pere',
+            first_name: '',
+            last_name: '',
+            phone: '',
+            email: '',
+            address: '',
+            profession: ''
+          });
+        }
+
+        if (fullChild.sante) {
+          setHealthData({
+            allergies: fullChild.sante.allergies ? fullChild.sante.allergies.join(', ') : '',
+            dietary_restrictions: fullChild.sante.restrictionsAlimentaires ? fullChild.sante.restrictionsAlimentaires.join(', ') : '',
+            medical_notes: fullChild.sante.remarquesMedicales || ''
+          });
+        } else {
+          setHealthData({
+            allergies: '',
+            dietary_restrictions: '',
+            medical_notes: ''
+          });
+        }
+      } catch (error) {
+        console.error('Error loading child data:', error);
+        setParentData({
+          relationship: 'pere',
+          first_name: '',
+          last_name: '',
+          phone: '',
+          email: '',
+          address: '',
+          profession: ''
+        });
+        setHealthData({
+          allergies: '',
+          dietary_restrictions: '',
+          medical_notes: ''
+        });
+      }
+    };
 
   const handleSubmit = async (e: React.FormEvent) => {
      e.preventDefault();
@@ -183,14 +183,17 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
          ...formData,
          classeId: formData.classeId,
          parentNom: parentData.first_name,
+         parentPrenom: parentData.last_name,
          parentTelephone: parentData.phone,
+         parentEmail: parentData.email,
+         parentProfession: parentData.profession,
+         parentRelation: parentData.relationship.toUpperCase(),
          adresse: parentData.address,
          fraisInscription: formData.fraisInscription,
          tarifMensuel: formData.tarifMensuel,
          allergies: healthData.allergies,
          restrictionsAlimentaires: healthData.dietary_restrictions,
          remarquesMedicales: healthData.medical_notes,
-         // Add parent details for full update
          parents: [{
            nom: parentData.first_name,
            prenom: parentData.last_name,
@@ -219,7 +222,6 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
        }
 
        onSave();
-       // Trigger accounting data refresh
        window.dispatchEvent(new CustomEvent('childCreated'));
      } catch (error: any) {
        console.error('Error saving child:', error);
