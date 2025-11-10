@@ -204,7 +204,6 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
            profession: parentData.profession,
            estContactUrgence: true
          }],
-         // Add health details
          sante: {
            allergies: healthData.allergies ? healthData.allergies.split(',').map(a => a.trim()).filter(a => a) : [],
            restrictionsAlimentaires: healthData.dietary_restrictions ? healthData.dietary_restrictions.split(',').map(r => r.trim()).filter(r => r) : [],

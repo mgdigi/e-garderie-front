@@ -177,9 +177,9 @@ export function StaffForm({ isOpen, onClose, onSave, staff }: StaffFormProps) {
                   <option value="">Sélectionner un poste</option>
                   <option value="DIRECTRICE">Directrice</option>
                   <option value="EDUCATRICE">Éducatrice</option>
-                  <option value="ASSISTANT">Assistant</option>
-                  <option value="CUISINIER">Cuisinier</option>
-                  <option value="AGENT_ENTRETIEN">Agent d'entretien</option>
+                  <option value="ASSISTANT">Assistante</option>
+                  <option value="CUISINIER">cuisinière</option>
+                  <option value="AGENT_ENTRETIEN">Agent(e) d'entretien</option>
                   <option value="GARDIEN">Gardien</option>
                 </select>
               </div>
