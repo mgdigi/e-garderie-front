@@ -28,8 +28,6 @@ interface AttendanceRecord {
   personnelId?: string;
   date: string;
   statut: string;
-  heureArrivee?: string;
-  heureDepart?: string;
   remarques?: string;
 }
 
@@ -69,7 +67,7 @@ export function Attendance() {
     if ((children.length > 0 && view === 'children') || (staff.length > 0 && view === 'staff')) {
       loadAttendance();
     }
-  }, [selectedDate, children, staff, view]);
+  }, [selectedDate, view, children.length, staff.length]);
 
   const loadChildren = async () => {
     try {
@@ -108,7 +106,7 @@ export function Attendance() {
   const loadStaff = async () => {
     try {
       const response = await apiService.getAllStaff();
-      // Filter only active staff
+     
       const activeStaff = (response.data || []).filter((person: any) => person.statut === 'ACTIF');
       setStaff(activeStaff);
     } catch (error) {
@@ -125,13 +123,23 @@ export function Attendance() {
       const attMap: Record<string, AttendanceRecord> = {};
       const marked: Set<string> = new Set();
 
+      console.log('Loading attendance for date:', selectedDate, 'response:', response.data);
+
       response.data?.forEach((att: AttendanceRecord) => {
         const personId = att.enfantId || att.personnelId;
         if (personId) {
-          attMap[personId] = att;
-          marked.add(personId); // Mark as already processed for this date
+          // Handle both string and object IDs
+          const id = typeof personId === 'string' ? personId : (personId as any)._id;
+          attMap[id] = att;
+          // Only mark as processed if the attendance record has a valid status
+          if (att.statut === 'PRESENT' || att.statut === 'ABSENT') {
+            marked.add(id);
+          }
         }
       });
+
+      console.log('Attendance map:', attMap);
+      console.log('Marked persons:', marked);
 
       setAttendance(attMap);
       setMarkedPersons(prev => ({
@@ -143,10 +151,11 @@ export function Attendance() {
     }
   };
 
-  const markAttendance = async (personId: string, status: string, actionType?: 'arrival' | 'departure') => {
-    const actionKey = `${personId}-${actionType || status}`;
+  const markAttendance = async (personId: string, status: string) => {
+    const actionKey = `${personId}-${status}`;
 
-    // Prévention des double-clics
+    console.log('Marking attendance for person:', personId, 'status:', status, 'date:', selectedDate);
+
     if (processingActions[actionKey]) {
       return;
     }
@@ -154,7 +163,6 @@ export function Attendance() {
     setProcessingActions(prev => ({ ...prev, [actionKey]: true }));
 
     try {
-      const currentTime = new Date().toTimeString().split(' ')[0];
       const existingAttendance = attendance[personId];
 
       let attendanceData: any = {
@@ -168,49 +176,24 @@ export function Attendance() {
         attendanceData.personnelId = personId;
       }
 
-      // Gestion des heures d'arrivée/départ
-      if (status === 'PRESENT') {
-        if (actionType === 'arrival' || !existingAttendance?.heureArrivee) {
-          // Enregistrement de l'arrivée
-          attendanceData.heureArrivee = currentTime;
-          attendanceData.heureDepart = existingAttendance?.heureDepart || undefined;
-        } else if (actionType === 'departure' || (existingAttendance?.heureArrivee && !existingAttendance?.heureDepart)) {
-          // Enregistrement du départ
-          attendanceData.heureDepart = currentTime;
-          attendanceData.heureArrivee = existingAttendance?.heureArrivee || undefined;
-        } else {
-          // Nouvelle arrivée si pas d'heure d'arrivée
-          attendanceData.heureArrivee = currentTime;
-          attendanceData.heureDepart = undefined;
-        }
-      } else {
-        // Pour absent, pas d'heures
-        attendanceData.heureArrivee = undefined;
-        attendanceData.heureDepart = undefined;
-      }
+      console.log('Attendance data to send:', attendanceData);
 
       let response;
       if (existingAttendance?._id) {
+        console.log('Updating existing attendance:', existingAttendance._id);
         response = await apiService.updateAttendance(existingAttendance._id, attendanceData);
       } else {
+        console.log('Creating new attendance');
         response = await apiService.markAttendance(attendanceData);
       }
 
-      // Mise à jour optimiste de l'état local
+      console.log('Response received:', response.data);
+
       const updatedAttendance = { ...attendance };
       updatedAttendance[personId] = response.data;
 
-      // Si départ marqué, changer automatiquement le statut à ABSENT
-      if (actionType === 'departure' && view === 'children') {
-        updatedAttendance[personId] = {
-          ...updatedAttendance[personId],
-          statut: 'ABSENT'
-        };
-      }
-
       setAttendance(updatedAttendance);
 
-      // Mise à jour des statistiques
       const markedKey = `${selectedDate}-${view}`;
       const currentMarked = markedPersons[markedKey] || new Set();
       const newMarked = new Set(currentMarked);
@@ -220,17 +203,20 @@ export function Attendance() {
         [markedKey]: newMarked
       }));
 
+      console.log('Updated attendance state:', updatedAttendance);
+      console.log('Updated marked persons:', markedPersons);
+
       showSuccessAlert('Présence enregistrée avec succès');
 
       // Envoyer notification SMS aux parents pour les enfants
-      if (view === 'children' && status === 'PRESENT' && actionType) {
-        await sendParentNotification(personId, actionType, currentTime);
-      }
+      // if (view === 'children') {
+      //   await sendParentNotification(personId, status);
+      // }
 
     } catch (error: any) {
       console.error('Error marking attendance:', error);
       showErrorAlert(error.message || 'Erreur lors de l\'enregistrement de la présence');
-      // Recharger les données en cas d'erreur pour synchroniser l'état
+
       loadAttendance();
     } finally {
       setProcessingActions(prev => ({ ...prev, [actionKey]: false }));
@@ -238,26 +224,25 @@ export function Attendance() {
   };
 
 
-  const sendParentNotification = async (childId: string, type: 'arrival' | 'departure', time: string) => {
-    try {
-      // Appeler l'API backend pour envoyer la notification
-      const response = await apiService.sendAttendanceNotification({
-        enfantId: childId,
-        type: type,
-        time: time
-      });
+  // const sendParentNotification = async (childId: string, statut: string) => {
+  //   try {
+  //     // Appeler l'API backend pour envoyer la notification
+  //     const response = await apiService.sendAttendanceNotification({
+  //       enfantId: childId,
+  //       statut: statut
+  //     });
 
-      if (response.success) {
-        showSuccessAlert(`Notification ${type === 'arrival' ? 'd\'arrivée' : 'de départ'} envoyée au parent`);
-      } else {
-        throw new Error(response.message || 'Erreur lors de l\'envoi de la notification');
-      }
+  //     if (response.success) {
+  //       showSuccessAlert(`Notification de ${statut === 'PRESENT' ? 'présence' : 'absence'} envoyée au parent`);
+  //     } else {
+  //       throw new Error(response.message || 'Erreur lors de l\'envoi de la notification');
+  //     }
 
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de la notification:', error);
-      showErrorAlert('Erreur lors de l\'envoi de la notification');
-    }
-  };
+  //   } catch (error) {
+  //     console.error('Erreur lors de l\'envoi de la notification:', error);
+  //     showErrorAlert('Erreur lors de l\'envoi de la notification');
+  //   }
+  // };
 
   const currentList = view === 'children' ? children.flatMap(group => group.children) : staff;
   const presentCount = Object.values(attendance).filter(a => a.statut === 'PRESENT').length;
@@ -417,12 +402,6 @@ export function Attendance() {
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900">{child.nom} {child.prenom}</p>
-                                {status && (
-                                  <div className="text-sm text-gray-600">
-                                    {attendanceRecord?.heureArrivee && <p>Arrivée: {attendanceRecord.heureArrivee}</p>}
-                                    {attendanceRecord?.heureDepart && <p>Départ: {attendanceRecord.heureDepart}</p>}
-                                  </div>
-                                )}
                               </div>
                             </div>
                             <div className="flex items-center space-x-2">
@@ -437,34 +416,6 @@ export function Attendance() {
                                   }`}>
                                     {status === 'PRESENT' ? '✓ Présent' : status === 'ABSENT' ? '✗ Absent' : status}
                                   </span>
-                                  {status === 'PRESENT' && (
-                                    <div className="flex space-x-1">
-                                      {!attendanceRecord?.heureArrivee && (
-                                        <button
-                                          onClick={() => markAttendance(child._id, 'PRESENT', 'arrival')}
-                                          disabled={processingActions[`${child._id}-arrival`] || processingActions[`${child._id}-PRESENT`]}
-                                          className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                          title="Enregistrer l'arrivée"
-                                        >
-                                          {processingActions[`${child._id}-arrival`] && <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>}
-                                          <Clock className="w-3 h-3" />
-                                          <span>Arrivée</span>
-                                        </button>
-                                      )}
-                                      {attendanceRecord?.heureArrivee && !attendanceRecord?.heureDepart && (
-                                        <button
-                                          onClick={() => markAttendance(child._id, 'PRESENT', 'departure')}
-                                          disabled={processingActions[`${child._id}-departure`] || processingActions[`${child._id}-PRESENT`]}
-                                          className="px-2 py-1 text-xs bg-orange-500 text-white rounded hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                          title="Enregistrer le départ"
-                                        >
-                                          {processingActions[`${child._id}-departure`] && <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>}
-                                          <LogOut className="w-3 h-3" />
-                                          <span>Départ</span>
-                                        </button>
-                                      )}
-                                    </div>
-                                  )}
                                   <button
                                     onClick={() => markAttendance(child._id, status === 'PRESENT' ? 'ABSENT' : 'PRESENT')}
                                     disabled={processingActions[`${child._id}-${status === 'PRESENT' ? 'ABSENT' : 'PRESENT'}`]}
@@ -478,22 +429,12 @@ export function Attendance() {
                                 <div className="flex items-center space-x-2">
                                   <div className="flex space-x-1">
                                     <button
-                                      onClick={() => markAttendance(child._id, 'PRESENT', 'arrival')}
-                                      disabled={processingActions[`${child._id}-arrival`] || processingActions[`${child._id}-PRESENT`]}
+                                      onClick={() => markAttendance(child._id, 'PRESENT')}
+                                      disabled={processingActions[`${child._id}-PRESENT`]}
                                       className="px-3 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                                     >
-                                      {processingActions[`${child._id}-arrival`] && <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent"></div>}
-                                      <Clock className="w-4 h-4" />
-                                      <span>✓ Arrivée</span>
-                                    </button>
-                                    <button
-                                      onClick={() => markAttendance(child._id, 'PRESENT', 'departure')}
-                                      disabled={processingActions[`${child._id}-departure`] || processingActions[`${child._id}-PRESENT`]}
-                                      className="px-3 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
-                                    >
-                                      {processingActions[`${child._id}-departure`] && <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent"></div>}
-                                      <LogOut className="w-4 h-4" />
-                                      <span>🚪 Départ</span>
+                                      {processingActions[`${child._id}-PRESENT`] && <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent"></div>}
+                                      <span>✓ Présent</span>
                                     </button>
                                     <button
                                       onClick={() => markAttendance(child._id, 'ABSENT')}
@@ -531,11 +472,9 @@ export function Attendance() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{person.nom} {person.prenom}</p>
-                        {status && (
+                        {status && attendanceRecord?.remarques && (
                           <div className="text-sm text-gray-600">
-                            {attendanceRecord?.heureArrivee && <p>Arrivée: {attendanceRecord.heureArrivee}</p>}
-                            {attendanceRecord?.heureDepart && <p>Départ: {attendanceRecord.heureDepart}</p>}
-                            {attendanceRecord?.remarques && <p className="text-xs italic">"{attendanceRecord.remarques}"</p>}
+                            <p className="text-xs italic">"{attendanceRecord.remarques}"</p>
                           </div>
                         )}
                       </div>
@@ -565,11 +504,11 @@ export function Attendance() {
                         <div className="flex items-center space-x-2">
                           <div className="flex space-x-1">
                             <button
-                              onClick={() => markAttendance(person._id, 'PRESENT', 'arrival')}
-                              disabled={processingActions[`${person._id}-arrival`] || processingActions[`${person._id}-PRESENT`]}
+                              onClick={() => markAttendance(person._id, 'PRESENT')}
+                              disabled={processingActions[`${person._id}-PRESENT`]}
                               className="px-3 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
                             >
-                              {processingActions[`${person._id}-arrival`] && <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent"></div>}
+                              {processingActions[`${person._id}-PRESENT`] && <div className="animate-spin rounded-full h-4 w-4 border border-white border-t-transparent"></div>}
                               <span>✓ Présent</span>
                             </button>
                             <button

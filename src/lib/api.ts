@@ -368,7 +368,7 @@ class ApiService {
   }
 
   // Attendance notification methods
-  async sendAttendanceNotification(notificationData: { enfantId: string; type: 'arrival' | 'departure'; time: string }) {
+  async sendAttendanceNotification(notificationData: { enfantId: string; statut: string }) {
     return this.request('/presences/send-notification', {
       method: 'POST',
       body: JSON.stringify(notificationData),
