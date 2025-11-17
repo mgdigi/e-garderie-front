@@ -536,9 +536,9 @@ export function Attendance() {
               <div className="text-center py-12">
                 <Check className="w-16 h-16 text-green-300 mx-auto mb-4" />
                 <p className="text-gray-500">Toutes les présences ont été marquées pour cette date !</p>
-                <p className="text-sm text-gray-400 mt-2">
+                {/* <p className="text-sm text-gray-400 mt-2">
                   {markedPersons[`${selectedDate}-${view}`]?.size || 0} enfant(s) marqué(s) sur {children.reduce((total, group) => total + group.children.length, 0)}
-                </p>
+                </p> */}
               </div>
             )
           ) : (
@@ -546,9 +546,9 @@ export function Attendance() {
               <div className="text-center py-12">
                 <Check className="w-16 h-16 text-green-300 mx-auto mb-4" />
                 <p className="text-gray-500">Toutes les présences ont été marquées pour cette date !</p>
-                <p className="text-sm text-gray-400 mt-2">
+                {/* <p className="text-sm text-gray-400 mt-2">
                   {markedPersons[`${selectedDate}-${view}`]?.size || 0} personne(s) marquée(s) sur {staff.length}
-                </p>
+                </p> */}
               </div>
             )
           )}
