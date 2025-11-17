@@ -53,12 +53,12 @@ export function Attendance() {
     loadStaff();
   }, []);
 
-  // Sauvegarder selectedDate dans localStorage
+ 
   useEffect(() => {
     localStorage.setItem('attendance-selectedDate', selectedDate);
   }, [selectedDate]);
 
-  // Sauvegarder view dans localStorage
+  
   useEffect(() => {
     localStorage.setItem('attendance-view', view);
   }, [view]);
@@ -91,7 +91,7 @@ export function Attendance() {
         return acc;
       }, {});
 
-      // Convertir en tableau et trier par nom de classe
+     
       const groupedChildren = Object.values(groupedByClass).sort((a: any, b: any) =>
         a.className.localeCompare(b.className)
       );
@@ -128,10 +128,10 @@ export function Attendance() {
       response.data?.forEach((att: AttendanceRecord) => {
         const personId = att.enfantId || att.personnelId;
         if (personId) {
-          // Handle both string and object IDs
+         
           const id = typeof personId === 'string' ? personId : (personId as any)._id;
           attMap[id] = att;
-          // Only mark as processed if the attendance record has a valid status
+        
           if (att.statut === 'PRESENT' || att.statut === 'ABSENT') {
             marked.add(id);
           }
@@ -245,8 +245,11 @@ export function Attendance() {
   // };
 
   const currentList = view === 'children' ? children.flatMap(group => group.children) : staff;
-  const presentCount = Object.values(attendance).filter(a => a.statut === 'PRESENT').length;
-  const absentCount = Object.values(attendance).filter(a => a.statut === 'ABSENT').length;
+  const currentAttendanceRecords = view === 'children'
+    ? Object.values(attendance).filter(a => a.enfantId)
+    : Object.values(attendance).filter(a => a.personnelId);
+  const presentCount = currentAttendanceRecords.filter(a => a.statut === 'PRESENT').length;
+  const absentCount = currentAttendanceRecords.filter(a => a.statut === 'ABSENT').length;
 
 
   if (loading) {

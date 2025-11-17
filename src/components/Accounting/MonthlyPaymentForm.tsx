@@ -204,7 +204,7 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
             <button
               type="submit"
               disabled={loading || !formData.enfantId}
-              className="px-6 py-3 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {loading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
