@@ -220,15 +220,7 @@ export function Dashboard() {
           <p className="text-gray-600 mt-1">Vue d'ensemble de votre crèche</p>
         </div>
         <div className="flex items-center space-x-4">
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-          >
-            <option value="7">7 jours</option>
-            <option value="30">30 jours</option>
-            <option value="90">90 jours</option>
-          </select>
+         
           <button
             onClick={refreshData}
             disabled={refreshing}
