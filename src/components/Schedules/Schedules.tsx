@@ -147,15 +147,28 @@ export function Schedules() {
                     </thead>
                     <tbody>
                       {schedule.planning ? (
-                        // Afficher les données du planning depuis la base de données
+                       
                         [
-                          { time: '08:00 - 09:00', start: '08:00', end: '09:00' },
-                          { time: '09:00 - 10:00', start: '09:00', end: '10:00' },
-                          { time: '10:00 - 11:00', start: '10:00', end: '11:00' },
-                          { time: '11:00 - 12:00', start: '11:00', end: '12:00' },
-                          { time: '12:00 - 14:00', start: '12:00', end: '14:00' },
-                          { time: '14:00 - 15:00', start: '14:00', end: '15:00' },
-                          { time: '15:00 - 17:00', start: '15:00', end: '17:00' }
+                          { time: '08:00 - 08:30', start: '08:00', end: '08:30' },
+                          { time: '08:30 - 09:00', start: '08:30', end: '09:00' },
+                          { time: '09:00 - 09:30', start: '09:00', end: '09:30' },
+                          { time: '09:30 - 10:00', start: '09:30', end: '10:00' },
+                          { time: '10:00 - 10:30', start: '10:00', end: '10:30' },
+                          { time: '10:30 - 11:00', start: '10:30', end: '11:00' },
+                          { time: '11:00 - 11:30', start: '11:00', end: '11:30' },
+                          { time: '11:30 - 12:00', start: '11:30', end: '12:00' },
+                          { time: '12:00 - 12:30', start: '12:00', end: '12:30' },
+                          { time: '12:30 - 13:00', start: '12:30', end: '13:00' },
+                          { time: '13:00 - 13:30', start: '13:00', end: '13:30' },
+                          { time: '13:30 - 14:00', start: '13:30', end: '14:00' },
+                          { time: '14:00 - 14:30', start: '14:00', end: '14:30' },
+                          { time: '14:30 - 15:00', start: '14:30', end: '15:00' },
+                          { time: '15:00 - 15:30', start: '15:00', end: '15:30' },
+                          { time: '15:30 - 16:00', start: '15:30', end: '16:00' },
+                          { time: '16:00 - 16:30', start: '16:00', end: '16:30' },
+                        
+                          
+                          
                         ].map((slot, index) => (
                           <tr key={index}>
                             <td className="border border-gray-200 p-3 font-medium text-gray-700">{slot.time}</td>
@@ -209,13 +222,15 @@ export function Schedules() {
                       ) : (
                         // Données par défaut si pas d'activités définies
                         [
-                          { time: '8:00 - 9:00', activity: 'Accueil', color: 'blue' },
-                          { time: '9:00 - 10:00', activity: 'Activités éducatives', color: 'green' },
-                          { time: '10:00 - 11:00', activity: 'Jeux libres', color: 'yellow' },
-                          { time: '11:00 - 12:00', activity: 'Déjeuner', color: 'orange' },
-                          { time: '12:00 - 14:00', activity: 'Sieste', color: 'purple' },
-                          { time: '14:00 - 15:00', activity: 'Goûter', color: 'pink' },
-                          { time: '15:00 - 17:00', activity: 'Activités & Départ', color: 'cyan' }
+                          { time: '8:00 - 8:30', activity: 'Accueil', color: 'blue' },
+                          { time: '8:30 - 9:00', activity: 'Activités éducatives', color: 'green' },
+                          { time: '9:00 - 9:30', activity: 'Jeux libres', color: 'yellow' },
+                          { time: '9:30 - 10:00', activity: 'Déjeuner', color: 'orange' },
+                          { time: '10:00 - 10:30', activity: 'Sieste', color: 'purple' },
+                          { time: '10:30 - 11:00', activity: 'Goûter', color: 'pink' },
+                          { time: '11:00 - 11:30', activity: 'Activités & Départ', color: 'cyan' },
+                          { time: '11:30 - 12:00', activity: 'Activités & Départ', color: 'cyan' }
+
                         ].map((slot, index) => (
                           <tr key={index}>
                             <td className="border border-gray-200 p-3 font-medium text-gray-700">{slot.time}</td>
