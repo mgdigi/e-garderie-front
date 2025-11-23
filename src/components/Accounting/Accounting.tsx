@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { DollarSign, TrendingUp, TrendingDown, Plus, CheckCircle, Filter, Search, Calendar } from 'lucide-react';
 import { apiService } from '../../lib/api';
 import { ExpenseForm } from './ExpenseForm';
+import { IncomeForm } from './IncomeForm';
 import { SalaryManagement } from './SalaryManagement';
 import { AccountingReports } from './AccountingReports';
 import { MonthlyPaymentForm } from './MonthlyPaymentForm';
@@ -49,6 +50,7 @@ export function Accounting() {
   const [view, setView] = useState<'income' | 'expenses' | 'salaries' | 'reports'>('income');
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('month');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showMonthlyPaymentForm, setShowMonthlyPaymentForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -302,6 +304,13 @@ export function Accounting() {
             >
               <Calendar className="w-4 h-4" />
               <span>Paiement mensuel</span>
+            </button>
+            <button
+              onClick={() => setShowIncomeForm(true)}
+              className="px-4 py-2 bg-gray-800 text-white rounded-xl hover:bg-orange-600 transition-colors flex items-center space-x-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Nouvelle recette</span>
             </button>
             <button
               onClick={() => setShowExpenseForm(true)}
@@ -727,6 +736,17 @@ export function Accounting() {
             setShowMonthlyPaymentForm(false);
           }}
           onClose={() => setShowMonthlyPaymentForm(false)}
+        />
+      )}
+
+      {/* Modal formulaire recette */}
+      {showIncomeForm && (
+        <IncomeForm
+          onIncomeCreated={() => {
+            loadData();
+            setShowIncomeForm(false);
+          }}
+          onClose={() => setShowIncomeForm(false)}
         />
       )}
 

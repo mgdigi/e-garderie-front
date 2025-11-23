@@ -83,22 +83,36 @@ export function ScheduleForm({ isOpen, onClose, onSave, classes, selectedClass, 
 
   const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
   const timeSlots = [
-    { start: '08:00', end: '09:00', label: '8h-9h' },
-    { start: '09:00', end: '10:00', label: '9h-10h' },
-    { start: '10:00', end: '11:00', label: '10h-11h' },
-    { start: '11:00', end: '12:00', label: '11h-12h' },
-    { start: '12:00', end: '14:00', label: '12h-14h' },
-    { start: '14:00', end: '15:00', label: '14h-15h' },
-    { start: '15:00', end: '17:00', label: '15h-17h' }
+    { start: '08:30', end: '09:00', label: '8h-9h' },
+    { start: '09:00', end: '09:30', label: '9h-10h' },
+    { start: '09:30', end: '10:00', label: '10h-11h' },
+    { start: '10:30', end: '11:00', label: '11h-12h' },
+    { start: '11:00', end: '11:30', label: '12h-14h' },
+    { start: '11:30', end: '12:00', label: '14h-15h' },
+    { start: '12:00', end: '12:30', label: '15h-17h' },
+    { start: '12:30', end: '13:00', label: '15h-17h' },
+    { start: '13:00', end: '13:30', label: '15h-17h' },
+    { start: '13:30', end: '14:00', label: '15h-17h' },
+    { start: '14:00', end: '14:30', label: '15h-17h' },
+    { start: '14:30', end: '15:00', label: '15h-17h' },
+    { start: '15:00', end: '15:30', label: '15h-17h' },
+    { start: '15:30', end: '16:00', label: '15h-17h' },
+    { start: '16:00', end: '16:30', label: '15h-17h' },
+
+
+
+
+
+
   ];
 
   const activityOptions = [
-    { value: 'ACCUEIL', label: 'Accueil' },
-    { value: 'PETIT_DEJEUNER', label: 'Petit-déjeuner' },
-    { value: 'ACTIVITE_PEDAGOGIQUE', label: 'Activité pédagogique' },
-    { value: 'JEU_LIBRE', label: 'Jeu libre' },
-    { value: 'SIESTE', label: 'Sieste' },
-    { value: 'DEJEUNER', label: 'Déjeuner' },
+    { value: 'ACCUEIL/aRituels', label: 'Accueil' },
+    { value: 'Arts musucaux/Arts sceniques', label: 'arts-musucaux' },
+    { value: 'Psychomotricité', label: 'Psychomotricite' },
+    { value: 'Mathematique', label: 'Mathematique' },
+    { value: 'Langage', label: 'Langage' },
+    { value: 'Graphisme ecriture', label: 'Déjeuner' },
     { value: 'GOUTER', label: 'Goûter' },
     { value: 'ACTIVITE_MOTRICE', label: 'Activité motrice' },
     { value: 'LECTURE', label: 'Lecture' },

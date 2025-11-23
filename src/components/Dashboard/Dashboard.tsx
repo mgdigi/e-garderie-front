@@ -56,6 +56,17 @@ interface RecentActivities {
   paiements: any[];
 }
 
+interface SectionData {
+  total: number;
+  presents: number;
+}
+
+interface DataGrouped {
+  [date: string]: {
+    [section: string]: SectionData;
+  };
+}
+
 export function Dashboard() {
   const [stats, setStats] = useState<Stats>({
     enfants: {
@@ -196,7 +207,7 @@ export function Dashboard() {
     },
     {
       title: 'Paiements en attente',
-      value: stats.alertes.filter(a => a.type === 'warning').reduce((sum, a) => sum + a.count, 0),
+      value: stats.alertes?.filter(a => a?.type === 'warning').reduce((sum, a) => sum + (a?.count || 0), 0) || 0,
       icon: AlertCircle,
       color: 'from-red-500 to-red-600',
       bgColor: 'bg-red-50',
@@ -306,9 +317,9 @@ export function Dashboard() {
           <div className="h-64">
             <Doughnut
               data={{
-                labels: chartData.repartitionFinanciere.map(item => `${item._id.type} - ${item._id.categorie}`),
+                labels: chartData.repartitionFinanciere?.map(item => `${item?._id?.type || ''} - ${item?._id?.categorie || ''}`) || [],
                 datasets: [{
-                  data: chartData.repartitionFinanciere.map(item => item.total),
+                  data: chartData.repartitionFinanciere?.map(item => item?.total || 0) || [],
                   backgroundColor: [
                     'rgba(239, 68, 68, 0.8)',
                     'rgba(247, 193, 42, 0.8)',
@@ -331,106 +342,102 @@ export function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <Activity className="w-5 h-5 mr-2 text-orange-600" />
             Activités récentes
           </h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
-            {recentActivities.inscriptions.map((inscription, index) => (
+            {recentActivities.inscriptions?.map((inscription, index) => (
               <div key={`insc-${index}`} className="flex items-start space-x-3 p-3 bg-blue-50 rounded-lg">
                 <Baby className="w-4 h-4 mt-1 text-orange-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-orange-900">
-                    Nouvelle inscription: {inscription.nom} {inscription.prenom}
+                    Nouvelle inscription: {inscription?.nom || ''} {inscription?.prenom || ''}
                   </p>
                   <p className="text-xs text-orange-600">
-                    {new Date(inscription.dateInscription).toLocaleDateString('fr-FR')}
+                    {inscription?.dateInscription ? new Date(inscription.dateInscription).toLocaleDateString('fr-FR') : ''}
                   </p>
                 </div>
               </div>
             ))}
-            {recentActivities.paiements.map((paiement, index) => (
+            {recentActivities.paiements?.map((paiement, index) => (
               <div key={`pay-${index}`} className={`flex items-start space-x-3 p-3 rounded-lg ${
-                paiement.type === 'RECETTE' ? 'bg-gray-50' : 'bg-red-50'
+                paiement?.type === 'RECETTE' ? 'bg-gray-50' : 'bg-red-50'
               }`}>
                 <DollarSign className={`w-4 h-4 mt-1 ${
-                  paiement.type === 'RECETTE' ? 'text-gray-600' : 'text-red-600'
+                  paiement?.type === 'RECETTE' ? 'text-gray-600' : 'text-red-600'
                 }`} />
                 <div className="flex-1">
                   <p className={`text-sm font-medium ${
-                    paiement.type === 'RECETTE' ? 'text-gray-900' : 'text-red-900'
+                    paiement?.type === 'RECETTE' ? 'text-gray-900' : 'text-red-900'
                   }`}>
-                    {paiement.type === 'RECETTE' ? 'Paiement reçu' : 'Paiement effectué'}
+                    {paiement?.type === 'RECETTE' ? 'Paiement reçu' : 'Paiement effectué'}
                   </p>
                   <p className="text-xs text-gray-600">
-                    {paiement.montantPaye?.toLocaleString()} XAF - {new Date(paiement.date).toLocaleDateString('fr-FR')}
+                    {(paiement?.montantPaye || 0).toLocaleString()} XAF - {paiement?.date ? new Date(paiement.date).toLocaleDateString('fr-FR') : ''}
                   </p>
                 </div>
               </div>
             ))}
-            {recentActivities.inscriptions.length === 0 && recentActivities.paiements.length === 0 && (
+            {(recentActivities.inscriptions?.length || 0) === 0 && (recentActivities.paiements?.length || 0) === 0 && (
               <p className="text-gray-500 text-center py-8">Aucune activité récente</p>
             )}
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <AlertCircle className="w-5 h-5 mr-2 text-orange-600" />
-            Alertes
-          </h3>
-          <div className="space-y-3">
-            {stats.alertes.map((alerte, index) => (
-              <div key={index} className={`flex items-start space-x-3 p-3 rounded-xl ${
-                alerte.type === 'warning' ? 'bg-yellow-50' :
-                alerte.type === 'danger' ? 'bg-red-50' : 'bg-blue-50'
-              }`}>
-                <AlertCircle className={`w-5 h-5 mt-0.5 ${
-                  alerte.type === 'warning' ? 'text-yellow-600' :
-                  alerte.type === 'danger' ? 'text-red-600' : 'text-blue-600'
-                }`} />
-                <div>
-                  <p className={`font-medium text-sm ${
-                    alerte.type === 'warning' ? 'text-yellow-900' :
-                    alerte.type === 'danger' ? 'text-red-900' : 'text-blue-900'
-                  }`}>
-                    {alerte.message}
-                  </p>
-                </div>
-              </div>
-            ))}
-            {stats.alertes.length === 0 && (
-              <p className="text-gray-500 text-center py-8">Aucune alerte</p>
-            )}
-          </div>
-        </div>
+        
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <BarChart3 className="w-5 h-5 mr-2 text-orange-600" />
-            Présences par section
+            Présences par section (aujourd'hui)
           </h3>
-          <div className="space-y-3">
-            {chartData.presenceParSection.map((section, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-gray-900">{section._id.section}</p>
-                  <p className="text-sm text-gray-600">
-                    {section.count} enfant{section.count > 1 ? 's' : ''}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-green-600">
-                    {section._id.statut === 'PRESENT' ? section.count : 0} présents
-                  </p>
-                </div>
-              </div>
-            ))}
-            {chartData.presenceParSection.length === 0 && (
-              <p className="text-gray-500 text-center py-8">Aucune donnée disponible</p>
-            )}
+          <div className="space-y-4 max-h-64 overflow-y-auto">
+            {(() => {
+              // Grouper les données par section pour aujourd'hui
+              const today = new Date().toISOString().split('T')[0]; // Format YYYY-MM-DD
+              const dataGrouped = chartData.presenceParSection?.reduce((acc, item) => {
+                const date = item?._id?.date;
+                const section = item?._id?.section;
+                if (!date || !section || date !== today) return acc;
+                if (!acc[section]) {
+                  acc[section] = { total: 0, presents: 0 };
+                }
+                acc[section].total += item?.count || 0;
+                if (item?._id?.statut === 'PRESENT') {
+                  acc[section].presents += item?.count || 0;
+                }
+                return acc;
+              }, {}) || {};
+
+              const sectionsArray = Object.keys(dataGrouped).sort();
+
+              return sectionsArray.length > 0 ? sectionsArray.map(section => {
+                const sectionData = dataGrouped[section];
+                return (
+                  <div key={section} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{section}</p>
+                      <p className="text-sm text-gray-600">
+                        {sectionData.total} enfant{sectionData.total > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-green-600">
+                        {sectionData.presents} présent{sectionData.presents > 1 ? 's' : ''}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {sectionData.total - sectionData.presents} absent{sectionData.total - sectionData.presents > 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }) : (
+                <p className="text-gray-500 text-center py-8">Aucune donnée disponible pour aujourd'hui</p>
+              );
+            })()}
           </div>
         </div>
       </div>
