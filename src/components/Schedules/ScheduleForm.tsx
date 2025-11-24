@@ -246,11 +246,11 @@ export function ScheduleForm({ isOpen, onClose, onSave, classes, selectedClass, 
                 required
               >
                 <option value="">Sélectionner une section</option>
-                {classes.map(cls => (
-                  <option key={cls._id} value={cls._id}>
-                    {cls.nom} (Capacité: {cls.capacite})
-                  </option>
-                ))}
+                <option value="CRECHE">Crèche</option>
+                <option value="PETITE SECTION">Petite Section</option>
+                <option value="MOYENNE SECTION">Moyenne Section</option>
+                <option value="GRANDS SECTION">Grands Section</option>
+                <option value="TOUTES">Toutes</option>
               </select>
             </div>
 

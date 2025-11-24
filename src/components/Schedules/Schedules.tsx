@@ -52,9 +52,10 @@ export function Schedules() {
     try {
       // Use static sections that match the backend
       setClasses([
-        { _id: 'BEBES', nom: 'Bébés (0-2 ans)', capacite: 20 },
-        { _id: 'MOYENS', nom: 'Moyens (2-4 ans)', capacite: 25 },
-        { _id: 'GRANDS', nom: 'Grands (4-6 ans)', capacite: 30 }
+        { _id: 'CRECHE', nom: 'Crèche (0-2 ans)', capacite: 25 },
+        { _id: 'GSECTION', nom: 'Grande Section (4-5 ans)', capacite: 25 },
+        { _id: 'MSection', nom: 'Moyenne Section (3-4 ans)', capacite: 25 },
+        { _id: 'PSection', nom: 'Petite Section (2-3 ans)', capacite: 25 }
       ]);
       if (classes.length > 0) setSelectedClass(classes[0]._id);
     } catch (error) {

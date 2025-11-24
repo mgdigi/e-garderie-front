@@ -75,7 +75,7 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
     });
 
    const [parentData, setParentData] = useState({
-     relationship: 'parent',
+     relationship: 'PERE',
      first_name: '',
      last_name: '',
      phone: '',
@@ -121,7 +121,7 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
           const firstParent = fullChild.parents[0];
           console.log('First parent data:', firstParent);
           setParentData({
-            relationship: firstParent.relation ? firstParent.relation.toLowerCase() : 'pere',
+            relationship: firstParent.relation || 'PERE',
             first_name: firstParent.nom || '',
             last_name: firstParent.prenom || '',
             phone: firstParent.telephone || '',
@@ -132,7 +132,7 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
         } else {
           console.log('No parent data found, setting defaults');
           setParentData({
-            relationship: 'pere',
+            relationship: 'PERE',
             first_name: '',
             last_name: '',
             phone: '',
@@ -158,7 +158,7 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
       } catch (error) {
         console.error('Error loading child data:', error);
         setParentData({
-          relationship: 'pere',
+          relationship: 'PERE',
           first_name: '',
           last_name: '',
           phone: '',
@@ -187,7 +187,7 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
          parentTelephone: parentData.phone,
          parentEmail: parentData.email,
          parentProfession: parentData.profession,
-         parentRelation: parentData.relationship.toUpperCase(),
+         parentRelation: parentData.relationship,
          adresse: parentData.address,
          fraisInscription: formData.fraisInscription,
          tarifMensuel: formData.tarifMensuel,
@@ -197,7 +197,7 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
          parents: [{
            nom: parentData.first_name,
            prenom: parentData.last_name,
-           relation: parentData.relationship.toUpperCase(),
+           relation: parentData.relationship,
            telephone: parentData.phone,
            email: parentData.email,
            adresse: parentData.address,
@@ -368,10 +368,10 @@ export function ChildForm({ child, classes, settings, onClose, onSave }: ChildFo
                   onChange={(e) => setParentData({ ...parentData, relationship: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 >
-                  <option value="pere">Père</option>
-                  <option value="mere">Mère</option>
-                  <option value="tuteur">Tuteur</option>
-                  <option value="autre">Autre</option>
+                  <option value="PERE">Père</option>
+                  <option value="MERE">Mère</option>
+                  <option value="TUTEUR">Tuteur</option>
+                  <option value="AUTRE">Autre</option>
                 </select>
               </div>
               <div>
