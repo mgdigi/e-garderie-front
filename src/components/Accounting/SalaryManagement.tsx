@@ -31,16 +31,20 @@ export function SalaryManagement() {
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 8;
 
   useEffect(() => {
     loadData();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth, selectedYear, currentPage]);
 
   const loadData = async () => {
     setLoading(true);
     try {
       const [staffRes, paymentsRes] = await Promise.all([
-        apiService.getStaff(),
+        apiService.getStaff({ page: currentPage, limit: itemsPerPage }),
         apiService.getPayments({
           type: 'DEPENSE',
           categorie: 'SALAIRES',
@@ -51,6 +55,8 @@ export function SalaryManagement() {
 
       setStaff(staffRes.data || []);
       setSalaryRecords(paymentsRes.data || []);
+      setTotalPages(staffRes.pagination?.totalPages || 1);
+      setTotalItems(staffRes.pagination?.totalItems || 0);
     } catch (error: any) {
       console.error('Erreur lors du chargement des données salaires:', error);
       showErrorAlert(error.message || 'Erreur lors du chargement des données');
@@ -86,6 +92,10 @@ export function SalaryManagement() {
     } catch (error: any) {
       showErrorAlert(error.message || 'Erreur lors du versement du salaire');
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   const getStaffSalaryStatus = (staffMember: Staff) => {
@@ -219,9 +229,11 @@ export function SalaryManagement() {
                         <div className="flex items-center space-x-2">
                           <CheckCircle className="w-4 h-4 text-green-600" />
                           <span className="text-green-700 font-medium">Versé</span>
-                          <span className="text-sm text-gray-500">
-                            ({new Date(salaryStatus.record!.datePaiement).toLocaleDateString('fr-FR')})
-                          </span>
+                          {/* <span className="text-sm text-gray-500">
+                            ({salaryStatus.record!.datePaiement && !isNaN(new Date(salaryStatus.record!.datePaiement).getTime())
+                              ? new Date(salaryStatus.record!.datePaiement).toLocaleDateString('fr-FR')
+                              : ''})
+                          </span> */}
                         </div>
                       ) : (
                         <div className="flex items-center space-x-2">
@@ -257,6 +269,62 @@ export function SalaryManagement() {
             <p className="text-center py-8 text-gray-500">Aucun personnel enregistré</p>
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
+            <div className="flex items-center text-sm text-gray-700">
+              <span>
+                Affichage de {((currentPage - 1) * itemsPerPage) + 1} à {Math.min(currentPage * itemsPerPage, totalItems)} sur {totalItems} résultats
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Précédent
+              </button>
+
+              {/* Numéros de page */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`px-3 py-1 text-sm font-medium rounded-md ${
+                      currentPage === pageNum
+                        ? 'text-orange-600 bg-orange-50 border border-orange-300'
+                        : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Suivant
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Historique des paiements de salaire */}
@@ -290,7 +358,9 @@ export function SalaryManagement() {
                       {record.montant.toLocaleString()} XAF
                     </td>
                     <td className="py-3 px-4 text-gray-700">
-                      {new Date(record.datePaiement).toLocaleDateString('fr-FR')}
+                      {record.datePaiement && !isNaN(new Date(record.datePaiement).getTime())
+                        ? new Date(record.datePaiement).toLocaleDateString('fr-FR')
+                        : new Date().toLocaleDateString('fr-FR')}
                     </td>
                     <td className="py-3 px-4 text-gray-700">{record.methodePaiement}</td>
                   </tr>

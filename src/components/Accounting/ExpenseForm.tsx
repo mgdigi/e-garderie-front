@@ -102,7 +102,7 @@ export function ExpenseForm({ onExpenseCreated, onClose }: ExpenseFormProps) {
   };
 
   const expenseCategories = [
-    'SALAIRES', 'FOURNITURES', 'ALIMENTATION', 'ENTRETIEN', 'ELECTRICITE',
+    'FOURNITURES', 'ALIMENTATION', 'ENTRETIEN', 'ELECTRICITE',
     'EAU', 'TELEPHONE', 'INTERNET', 'ASSURANCE', 'LOYER', 'TRANSPORT', 'AUTRES_DEPENSES'
   ];
 
@@ -231,7 +231,7 @@ export function ExpenseForm({ onExpenseCreated, onClose }: ExpenseFormProps) {
           </div>
 
           {/* Champs conditionnels selon la catégorie */}
-          {formData.categorie === 'SALAIRES' && (
+          {/* {formData.categorie === 'SALAIRES' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -281,7 +281,7 @@ export function ExpenseForm({ onExpenseCreated, onClose }: ExpenseFormProps) {
                 />
               </div>
             </div>
-          )}
+          )} */}
 
           {/* Boutons */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
