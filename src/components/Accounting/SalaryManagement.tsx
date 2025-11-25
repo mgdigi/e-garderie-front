@@ -27,6 +27,7 @@ interface SalaryRecord {
 
 export function SalaryManagement() {
   const [staff, setStaff] = useState<Staff[]>([]);
+  const [allStaff, setAllStaff] = useState<Staff[]>([]);
   const [salaryRecords, setSalaryRecords] = useState<SalaryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -37,23 +38,27 @@ export function SalaryManagement() {
   const itemsPerPage = 8;
 
   useEffect(() => {
+    setCurrentPage(1); // Reset to first page when month/year changes
+  }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
     loadData();
   }, [selectedMonth, selectedYear, currentPage]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [staffRes, paymentsRes] = await Promise.all([
+      const [staffRes, allStaffRes, paymentsRes] = await Promise.all([
         apiService.getStaff({ page: currentPage, limit: itemsPerPage }),
+        apiService.getAllStaff(),
         apiService.getPayments({
           type: 'DEPENSE',
-          categorie: 'SALAIRES',
-          dateDebut: `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`,
-          dateFin: new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0]
+          categorie: 'SALAIRES'
         })
       ]);
 
       setStaff(staffRes.data || []);
+      setAllStaff(allStaffRes.data || []);
       setSalaryRecords(paymentsRes.data || []);
       setTotalPages(staffRes.pagination?.totalPages || 1);
       setTotalItems(staffRes.pagination?.totalItems || 0);
@@ -76,7 +81,7 @@ export function SalaryManagement() {
         type: 'DEPENSE',
         categorie: 'SALAIRES',
         montant: staffMember.salaire,
-        description: `Salaire ${new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })} - ${staffMember.nom} ${staffMember.prenom}`,
+        description: `Salaire ${new Date(selectedYear, selectedMonth - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })} - ${staffMember.nom} ${staffMember.prenom}`,
         date: new Date().toISOString().split('T')[0],
         methodePaiement: 'VIREMENT',
         personnelId: staffMember._id,
@@ -112,7 +117,7 @@ export function SalaryManagement() {
     return { status: 'unpaid' };
   };
 
-  const totalSalaries = staff.reduce((sum, member) => sum + (member.salaire || 0), 0);
+  const totalSalaries = allStaff.reduce((sum, member) => sum + (member.salaire || 0), 0);
   const paidSalaries = salaryRecords
     .filter(record => record.periode.mois === selectedMonth && record.periode.annee === selectedYear)
     .reduce((sum, record) => sum + record.montant, 0);
