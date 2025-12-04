@@ -38,7 +38,7 @@ export function SalaryManagement() {
   const itemsPerPage = 8;
 
   useEffect(() => {
-    setCurrentPage(1); // Reset to first page when month/year changes
+    setCurrentPage(1); 
   }, [selectedMonth, selectedYear]);
 
   useEffect(() => {

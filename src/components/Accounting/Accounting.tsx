@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Plus, CheckCircle, Filter, Search, Calendar } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Plus, CheckCircle, Filter, Search, Calendar, FileText, Receipt } from 'lucide-react';
 import { apiService } from '../../lib/api';
+
 import { ExpenseForm } from './ExpenseForm';
 import { IncomeForm } from './IncomeForm';
 import { SalaryManagement } from './SalaryManagement';
 import { AccountingReports } from './AccountingReports';
 import { MonthlyPaymentForm } from './MonthlyPaymentForm';
+import { SimpleInvoiceForm } from './SimpleInvoiceForm';
+import { InvoicesList } from './InvoicesList';
 import { showErrorAlert, showSuccessAlert } from '../../lib/sweetalert';
 
 interface Payment {
@@ -47,11 +50,13 @@ export function Accounting() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'income' | 'expenses' | 'salaries' | 'reports'>('income');
+  const [view, setView] = useState<'income' | 'expenses' | 'salaries' | 'reports' | 'factures'>('income');
   const [period, setPeriod] = useState<'today' | 'week' | 'month'>('month');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showMonthlyPaymentForm, setShowMonthlyPaymentForm] = useState(false);
+  const [showMonthlyInvoiceGeneration, setShowMonthlyInvoiceGeneration] = useState(false);
+  const [showSimpleInvoiceForm, setShowSimpleInvoiceForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
@@ -120,7 +125,7 @@ export function Accounting() {
      } finally {
        setLoading(false);
      }
-   };
+  };
 
   const totalIncome = payments.reduce((sum, p) => sum + Number(p.montantPaye), 0);
   const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.montant), 0);
@@ -149,7 +154,7 @@ export function Accounting() {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc;">
         <div style="display: flex; align-items: center; margin-bottom: 30px;">
           <div style="flex-shrink: 0; margin-right: 20px;">
-            <img src="${creche?.logo ? `http://localhost:4000${creche.logo}` : '/images/logo.png'}" alt="Logo" style="width: 80px; height: 80px; object-fit: contain;" />
+            <img src="/images/logo.png" alt="Logo" style="width: 80px; height: 80px; object-fit: contain;" />
           </div>
           <div style="text-align: left;">
             <h1 style="color: #f97316; margin: 0; font-size: 24px;">${creche?.nom || 'E-Garderie'}</h1>
@@ -305,6 +310,20 @@ export function Accounting() {
               <Calendar className="w-4 h-4" />
               <span>Paiement mensuel</span>
             </button>
+            {/* <button
+              onClick={() => setShowSimpleInvoiceForm(true)}
+              className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center space-x-2"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Facture simple</span>
+            </button> */}
+            {/* <button
+              onClick={() => setShowMonthlyInvoiceGeneration(true)}
+              className="px-4 py-2 bg-orange-600 text-white rounded-xl hover:bg-orange-700 transition-colors flex items-center space-x-2 font-semibold"
+            >
+              <FileText className="w-4 h-4" />
+              <span>Générer les factures mensuelles</span>
+            </button> */}
             <button
               onClick={() => setShowIncomeForm(true)}
               className="px-4 py-2 bg-gray-800 text-white rounded-xl hover:bg-orange-600 transition-colors flex items-center space-x-2"
@@ -394,6 +413,14 @@ export function Accounting() {
                 }`}
               >
                 Rapports
+              </button>
+              <button
+                onClick={() => setView('factures')}
+                className={`px-4 py-2 rounded-lg font-medium transition flex items-center space-x-2 ${
+                  view === 'factures' ? 'bg-orange-100 text-orange-700' : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <span>Factures</span>
               </button>
             </div>
 
@@ -499,6 +526,8 @@ export function Accounting() {
             <AccountingReports />
           ) : view === 'salaries' ? (
             <SalaryManagement />
+          ) : view === 'factures' ? (
+            <InvoicesList />
           ) : view === 'income' ? (
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -739,6 +768,75 @@ export function Accounting() {
         />
       )}
 
+      {/* Modal génération automatique des factures */}
+      {showMonthlyInvoiceGeneration && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Génération automatique des factures</h3>
+                <button
+                  onClick={() => setShowMonthlyInvoiceGeneration(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600">
+                  Cette action va générer automatiquement les factures mensuelles pour tous les enfants actifs de la crèche.
+                  Seules les factures qui n'existent pas encore seront créées.
+                </p>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium">Informations importantes :</p>
+                      <ul className="mt-1 list-disc list-inside space-y-1">
+                        <li>Le montant sera basé sur le tarif mensuel défini pour chaque enfant</li>
+                        <li>La période sera le mois en cours</li>
+                        <li>Les factures existantes ne seront pas recréées</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => setShowMonthlyInvoiceGeneration(false)}
+                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await apiService.generateMonthlyInvoices();
+                        showSuccessAlert(`Génération terminée: ${response.data.facturesCrees} factures créées`);
+                        loadData();
+                        setShowMonthlyInvoiceGeneration(false);
+                      } catch (error: any) {
+                        console.error('Erreur lors de la génération:', error);
+                        showErrorAlert(error.response?.data?.message || 'Erreur lors de la génération des factures');
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    Générer les factures
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal formulaire recette */}
       {showIncomeForm && (
         <IncomeForm
@@ -760,8 +858,15 @@ export function Accounting() {
           onClose={() => setShowExpenseForm(false)}
         />
       )}
+
+      {/* Modal facture simple */}
+      {showSimpleInvoiceForm && (
+        <SimpleInvoiceForm
+          isOpen={showSimpleInvoiceForm}
+          onClose={() => setShowSimpleInvoiceForm(false)}
+          onSuccess={() => loadData()}
+        />
+      )}
     </div>
   );
 }
-  
-

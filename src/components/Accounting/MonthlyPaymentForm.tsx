@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, DollarSign } from 'lucide-react';
+import { X, Calendar, DollarSign, Search, User } from 'lucide-react';
 import { apiService } from '../../lib/api';
 import { showErrorAlert, showSuccessAlert } from '../../lib/sweetalert';
 
@@ -18,9 +18,12 @@ interface Child {
 
 export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPaymentFormProps) {
   const [children, setChildren] = useState<Child[]>([]);
+  const [filteredChildren, setFilteredChildren] = useState<Child[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    enfantId: '',
     mois: new Date().getMonth() + 1,
     annee: new Date().getFullYear(),
     montant: 0,
@@ -33,20 +36,51 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
 
   const loadChildren = async () => {
     try {
-      const response = await apiService.getChildren();
-      setChildren(response.data || []);
+      // Charger tous les enfants avec la méthode optimisée
+      const response = await apiService.getAllChildren();
+      const allChildren = response.data || [];
+      setChildren(allChildren);
+      setFilteredChildren(allChildren);
     } catch (error) {
       console.error('Erreur lors du chargement des enfants:', error);
+      showErrorAlert('Erreur lors du chargement des enfants');
     }
   };
 
-  const handleChildChange = (enfantId: string) => {
-    const selectedChild = children.find(c => c._id === enfantId);
+  // Filtrer les enfants en fonction de la recherche
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredChildren(children);
+    } else {
+      const filtered = children.filter(child =>
+        child.prenom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        child.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        child.numeroInscription.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredChildren(filtered);
+    }
+  }, [searchTerm, children]);
+
+  const handleChildSelect = (child: Child) => {
+    setSelectedChild(child);
     setFormData(prev => ({
       ...prev,
-      enfantId,
-      montant: selectedChild?.tarifMensuel || 0
+      enfantId: child._id,
+      montant: child.tarifMensuel || 0
     }));
+    setSearchTerm(`${child.prenom} ${child.nom}`);
+    setShowDropdown(false);
+  };
+
+  const handleSearchFocus = () => {
+    setShowDropdown(true);
+  };
+
+  const handleSearchBlur = () => {
+    // Délai pour permettre le clic sur un élément de la liste
+    setTimeout(() => {
+      setShowDropdown(false);
+    }, 200);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,8 +88,13 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
     setLoading(true);
 
     try {
+      if (!selectedChild) {
+        showErrorAlert('Veuillez sélectionner un enfant');
+        return;
+      }
+
       await apiService.createMonthlyPayment({
-        enfantId: formData.enfantId,
+        enfantId: selectedChild._id,
         mois: formData.mois,
         annee: formData.annee,
         montant: formData.montant,
@@ -98,24 +137,73 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Sélection de l'enfant */}
+          {/* Recherche d'enfant */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Enfant *
             </label>
-            <select
-              value={formData.enfantId}
-              onChange={(e) => handleChildChange(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              required
-            >
-              <option value="">Sélectionner un enfant</option>
-              {children.map((child) => (
-                <option key={child._id} value={child._id}>
-                  {child.prenom} {child.nom} - #{child.numeroInscription} ({child.tarifMensuel?.toLocaleString()} XAF/mois)
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <div className="relative">
+                <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onFocus={handleSearchFocus}
+                  onBlur={handleSearchBlur}
+                  placeholder="Rechercher par nom, prénom ou numéro d'inscription..."
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              
+              {/* Dropdown des résultats */}
+              {showDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                  {filteredChildren.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      {searchTerm.trim() === '' ? 'Tapez pour rechercher un enfant' : 'Aucun enfant trouvé'}
+                    </div>
+                  ) : (
+                    <div className="py-2">
+                      {filteredChildren.map((child) => (
+                        <div
+                          key={child._id}
+                          onClick={() => handleChildSelect(child)}
+                          className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                              <User className="w-5 h-5 text-orange-500" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-gray-900">
+                                {child.prenom} {child.nom}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                #{child.numeroInscription} • {child.tarifMensuel?.toLocaleString()} XAF/mois
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Enfant sélectionné */}
+            {selectedChild && (
+              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-xl">
+                <p className="text-sm text-green-800">
+                  <span className="font-medium">Enfant sélectionné:</span> {selectedChild.prenom} {selectedChild.nom}
+                </p>
+                <p className="text-sm text-green-600">
+                  Tarif mensuel: {selectedChild.tarifMensuel?.toLocaleString()} XAF
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Période */}
@@ -203,7 +291,7 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
             </button>
             <button
               type="submit"
-              disabled={loading || !formData.enfantId}
+              disabled={loading || !selectedChild}
               className="px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {loading ? (

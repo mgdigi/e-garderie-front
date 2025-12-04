@@ -110,7 +110,7 @@ export function PaymentValidation({ onPaymentValidated }: PaymentValidationProps
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc;">
         <div style="display: flex; align-items: center; margin-bottom: 30px;">
           <div style="flex-shrink: 0; margin-right: 20px;">
-            <img src="${creche?.logo ? `http://localhost:4000${creche.logo}` : '/images/logo.png'}" alt="Logo" style="width: 80px; height: 80px; object-fit: contain;" />
+            <img src="/images/logo.png" alt="Logo" style="width: 80px; height: 80px; object-fit: contain;" />
           </div>
           <div style="text-align: left;">
             <h1 style="color: #f97316; margin: 0; font-size: 24px;">${creche.nom || 'E-Garderie'}</h1>
@@ -338,7 +338,7 @@ export function PaymentValidation({ onPaymentValidated }: PaymentValidationProps
               <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
                 <div className="flex items-center mb-6">
                   <div className="flex-shrink-0 mr-4">
-                    <img src={creche?.logo ? `http://localhost:4000${creche.logo}` : '/images/logo.png'} alt="Logo" className="w-16 h-16 object-contain" />
+                    <img src="/images/logo.png" alt="Logo" className="w-16 h-16 object-contain" />
                   </div>
                   <div className="text-left">
                     <h1 className="text-2xl font-bold text-orange-600 mb-1">{creche?.nom || 'E-Garderie'}</h1>

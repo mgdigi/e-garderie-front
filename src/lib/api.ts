@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4001/api';
 
 class ApiService {
   private baseURL: string;
@@ -94,8 +94,22 @@ class ApiService {
   }
 
   // Children methods
-  async getChildren() {
-    return this.request('/enfants');
+  async getChildren(params?: { page?: number; limit?: number; search?: string }) {
+    // Si aucun paramètre n'est fourni, récupérer tous les enfants
+    if (!params) {
+      return this.request('/enfants?limit=1000'); // Grande limite pour récupérer tous
+    }
+    
+    // Transformer les paramètres en format string pour URLSearchParams
+    const transformedParams = Object.fromEntries(
+      Object.entries(params).map(([key, value]) => [key, value?.toString() || ''])
+    );
+    const query = new URLSearchParams(transformedParams).toString();
+    return this.request(`/enfants${query ? `?${query}` : ''}`);
+  }
+
+  async getAllChildren() {
+    return this.request('/enfants?limit=1000'); // Récupérer tous les enfants
   }
 
   async createChild(childData: any) {
@@ -246,6 +260,65 @@ class ApiService {
     return this.request(`/paiements/enfant/${childId}`);
   }
 
+  async generateMonthlyInvoices(data?: { mois?: number; annee?: number }) {
+    return this.request('/factures/generate-monthly', {
+      method: 'POST',
+      body: JSON.stringify(data || {}),
+    });
+  }
+
+  // Méthodes pour les factures
+  async getFactures(params?: { statut?: string; enfantId?: string; mois?: number; annee?: number }) {
+    const transformedParams = params ? Object.fromEntries(
+      Object.entries(params).map(([key, value]) => [key, value?.toString() || ''])
+    ) : null;
+    const query = transformedParams ? new URLSearchParams(transformedParams).toString() : '';
+    return this.request(`/factures${query ? `?${query}` : ''}`);
+  }
+
+  async createFacture(factureData: any) {
+    return this.request('/factures', {
+      method: 'POST',
+      body: JSON.stringify(factureData),
+    });
+  }
+
+  async updateFacture(id: string, factureData: any) {
+    return this.request(`/factures/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(factureData),
+    });
+  }
+
+  async getFacture(id: string) {
+    return this.request(`/factures/${id}`);
+  }
+
+  async deleteFacture(id: string) {
+    return this.request(`/factures/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async generateFacturePDF(factureId: string) {
+    return this.request(`/factures/${factureId}/pdf`);
+  }
+
+  async validateFacturePayment(id: string, paymentData: any) {
+    return this.request(`/factures/${id}/validate`, {
+      method: 'POST',
+      body: JSON.stringify(paymentData),
+    });
+  }
+
+  // Générer une facture simple personnalisée
+  async generateSimpleInvoice(data: { enfantId: string; mois: number; message?: string }) {
+    return this.request('/factures/simple', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   async getSalaryHistory(staffId: string) {
     return this.request(`/personnel/${staffId}/salaires`);
   }
@@ -356,7 +429,7 @@ class ApiService {
     });
   }
 
-  // Dashboard methods
+  
   async getDashboardCharts(params?: { periode?: string }) {
     const query = params ? new URLSearchParams(params).toString() : '';
     return this.request(`/dashboard/charts${query ? `?${query}` : ''}`);
@@ -367,11 +440,19 @@ class ApiService {
     return this.request(`/dashboard/recent-activities${query ? `?${query}` : ''}`);
   }
 
-  // Attendance notification methods
+ 
   async sendAttendanceNotification(notificationData: { enfantId: string; statut: string }) {
     return this.request('/presences/send-notification', {
       method: 'POST',
       body: JSON.stringify(notificationData),
+    });
+  }
+
+ 
+  async post(endpoint: string, data?: any) {
+    return this.request(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
     });
   }
 
