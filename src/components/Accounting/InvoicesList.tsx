@@ -55,10 +55,7 @@ const generatePDFFacture = async (factureData: any, enfant: any, creche: any) =>
       <div style="margin-bottom: 30px;">
         <p><strong>Modes de paiement acceptés:</strong></p>
         <p style="margin-left: 20px;">• Espèces</p>
-        <p style="margin-left: 20px;">• Virement bancaire</p>
-        <p style="margin-left: 20px;">• Orange Money</p>
-        <p style="margin-left: 20px;">• Wave</p>
-        <p style="margin-left: 20px;">• Carte bancaire</p>
+        <p style="margin-left: 20px;">• Paiement Mobile</p>
         <p style="margin-left: 20px;">• Chèque</p>
       </div>
 

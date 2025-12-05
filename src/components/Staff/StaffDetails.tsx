@@ -21,7 +21,7 @@ interface Staff {
 interface PaymentRecord {
   _id: string;
   montant: number;
-  datePaiement: string;
+  date: string;
   type: string;
   categorie: string;
   statut: string;
@@ -79,7 +79,7 @@ export function StaffDetails({ staffId, onClose }: StaffDetailsProps) {
     // Employee info
     doc.text(`Employé: ${staff.prenom} ${staff.nom}`, 20, 80);
     doc.text(`Poste: ${staff.poste}`, 20, 90);
-    doc.text(`Période: ${new Date(payment.datePaiement).toLocaleDateString('fr-FR')}`, 20, 100);
+    doc.text(`Période: ${new Date(payment.date).toLocaleDateString('fr-FR')}`, 20, 100);
 
     // Salary details
     doc.text('DÉTAIL DE LA RÉMUNÉRATION', 20, 120);
@@ -92,7 +92,7 @@ export function StaffDetails({ staffId, onClose }: StaffDetailsProps) {
     doc.text('Signature: ___________________________', 20, 220);
 
     // Save the PDF
-    doc.save(`bulletin_paie_${staff.prenom}_${staff.nom}_${new Date(payment.datePaiement).getMonth() + 1}_${new Date(payment.datePaiement).getFullYear()}.pdf`);
+    doc.save(`bulletin_paie_${staff.prenom}_${staff.nom}_${new Date(payment.date).getMonth() + 1}_${new Date(payment.date).getFullYear()}.pdf`);
   };
 
   if (loading) {
@@ -213,7 +213,7 @@ export function StaffDetails({ staffId, onClose }: StaffDetailsProps) {
                   <div key={payment._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900">
-                        {new Date(payment.datePaiement).toLocaleDateString('fr-FR', {
+                        {new Date(payment.date).toLocaleDateString('fr-FR', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'

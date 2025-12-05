@@ -36,7 +36,6 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
 
   const loadChildren = async () => {
     try {
-      // Charger tous les enfants avec la méthode optimisée
       const response = await apiService.getAllChildren();
       const allChildren = response.data || [];
       setChildren(allChildren);
@@ -47,7 +46,6 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
     }
   };
 
-  // Filtrer les enfants en fonction de la recherche
   useEffect(() => {
     if (searchTerm.trim() === '') {
       setFilteredChildren(children);
@@ -77,7 +75,6 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
   };
 
   const handleSearchBlur = () => {
-    // Délai pour permettre le clic sur un élément de la liste
     setTimeout(() => {
       setShowDropdown(false);
     }, 200);
@@ -137,7 +134,6 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Recherche d'enfant */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Enfant *
@@ -157,7 +153,6 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
                 />
               </div>
               
-              {/* Dropdown des résultats */}
               {showDropdown && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                   {filteredChildren.length === 0 ? (
@@ -193,7 +188,6 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
               )}
             </div>
             
-            {/* Enfant sélectionné */}
             {selectedChild && (
               <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-xl">
                 <p className="text-sm text-green-800">
@@ -242,7 +236,6 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
             </div>
           </div>
 
-          {/* Montant */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Montant (XAF) *
@@ -261,7 +254,6 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
             </div>
           </div>
 
-          {/* Méthode de paiement */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Méthode de paiement *
@@ -280,7 +272,6 @@ export function MonthlyPaymentForm({ onPaymentCreated, onClose }: MonthlyPayment
             </select>
           </div>
 
-          {/* Boutons */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
             <button
               type="button"

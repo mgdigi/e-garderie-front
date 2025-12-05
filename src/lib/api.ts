@@ -93,14 +93,11 @@ class ApiService {
     return this.request('/dashboard/stats');
   }
 
-  // Children methods
   async getChildren(params?: { page?: number; limit?: number; search?: string }) {
-    // Si aucun paramètre n'est fourni, récupérer tous les enfants
     if (!params) {
       return this.request('/enfants?limit=1000'); // Grande limite pour récupérer tous
     }
     
-    // Transformer les paramètres en format string pour URLSearchParams
     const transformedParams = Object.fromEntries(
       Object.entries(params).map(([key, value]) => [key, value?.toString() || ''])
     );
@@ -194,9 +191,9 @@ class ApiService {
   }
 
   // Attendance methods
-  async getAttendance(date?: string) {
-    const query = date ? `?date=${date}` : '';
-    return this.request(`/presences${query}`);
+  async getAttendance(params?: { date?: string; enfantId?: string; type?: string; personnelId?: string }) {
+    const query = params ? new URLSearchParams(params).toString() : '';
+    return this.request(`/presences${query ? `?${query}` : ''}`);
   }
 
   async markAttendance(attendanceData: any) {

@@ -103,110 +103,113 @@ export function PaymentValidation({ onPaymentValidated }: PaymentValidationProps
 
   const generatePDFReceipt = async (paiement: any, creche: any, enfant: any, validePar: any) => {
     const { jsPDF } = await import('jspdf');
-    const html2canvas = (await import('html2canvas')).default;
-
-    // Create receipt HTML content
-    const receiptHTML = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc;">
-        <div style="display: flex; align-items: center; margin-bottom: 30px;">
-          <div style="flex-shrink: 0; margin-right: 20px;">
-            <img src="/images/logo.png" alt="Logo" style="width: 80px; height: 80px; object-fit: contain;" />
-          </div>
-          <div style="text-align: left;">
-            <h1 style="color: #f97316; margin: 0; font-size: 24px;">${creche.nom || 'E-Garderie'}</h1>
-            <p style="margin: 5px 0; color: #666;">${creche.adresse || 'Dakar, Sénégal'}</p>
-            <p style="margin: 5px 0; color: #666;">${creche.telephone || '+221 XX XXX XX XX'}</p>
-            <p style="margin: 5px 0; color: #666;">${creche.email || 'contact@e-garderie.sn'}</p>
-          </div>
-        </div>
-
-        <div style="border-bottom: 2px solid #f97316; margin-bottom: 20px;"></div>
-
-        <h2 style="text-align: center; color: #333; margin-bottom: 30px;">REÇU DE PAIEMENT</h2>
-
-        ${enfant ? `
-        <div style="background: #f9f9f9; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-          <h3 style="margin: 0 0 10px 0; color: #333;">Informations de l'enfant</h3>
-          <p style="margin: 5px 0;"><strong>Nom:</strong> ${enfant.prenom} ${enfant.nom}</p>
-          <p style="margin: 5px 0;"><strong>Numéro d'inscription:</strong> ${enfant.numeroInscription}</p>
-        </div>
-        ` : ''}
-
-        <div style="background: #f0f8ff; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-          <h3 style="margin: 0 0 10px 0; color: #333;">Détails du paiement</h3>
-          <p style="margin: 5px 0;"><strong>Description:</strong> ${paiement.description}</p>
-          <p style="margin: 5px 0;"><strong>Méthode de paiement:</strong> ${paiement.methodePaiement}</p>
-          <p style="margin: 5px 0; font-size: 18px; font-weight: bold; color: #f97316;">
-            <strong>Montant:</strong> ${paiement.montantPaye?.toLocaleString('fr-FR') || paiement.montant.toLocaleString('fr-FR')} XAF
-          </p>
-        </div>
-
-        <div style="margin-bottom: 30px;">
-          <p><strong>Date de paiement:</strong> ${new Date(paiement.date).toLocaleDateString('fr-FR')}</p>
-          <p><strong>Référence:</strong> ${paiement.reference || `REC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`}</p>
-        </div>
-
-        <div style="border-top: 1px solid #ccc; padding-top: 20px; text-align: center; color: #666; font-size: 12px;">
-          <p style="margin-bottom: 10px;"><strong>${creche.nom || 'E-Garderie'}</strong></p>
-          <p style="margin-bottom: 5px;">${creche.email || 'contact@e-garderie.sn'}</p>
-          <p>Ce reçu est généré automatiquement et fait office de justificatif officiel de paiement.</p>
-          <p>Conservez-le précieusement pour vos archives comptables.</p>
-        </div>
-      </div>
-    `;
-
-    // Create a temporary element to render the HTML
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = receiptHTML;
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.top = '-9999px';
-    tempDiv.style.width = '600px';
-    document.body.appendChild(tempDiv);
-
-    try {
-      // Convert HTML to canvas
-      const canvas = await html2canvas(tempDiv, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: 600,
-        height: tempDiv.scrollHeight
-      });
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 295; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
-
-      let position = 0;
-
-      // Add first page
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      // Add additional pages if needed
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      // Download the PDF
-      const reference = enfant ? enfant.numeroInscription : paiement._id.substring(0, 8);
-      const fileName = `recu_${reference}_${new Date().toISOString().split('T')[0]}.pdf`;
-      pdf.save(fileName);
-
-    } finally {
-      // Clean up
-      document.body.removeChild(tempDiv);
+    
+    // Create PDF
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    
+    // Define PDF dimensions - VERSION ULTRA-COMPACTE
+    const pageWidth = 210; // A4 width in mm
+    const margin = 10; // Marges minimales à 10mm
+    
+    // Start drawing - VERSION ULTRA-COMPACTE
+    let y = margin;
+    
+    // EN-TÊTE ULTRA-COMPACT
+    pdf.setFillColor(255, 165, 0); // Logo orange
+    pdf.rect(margin, y, 8, 8, 'F');
+    
+    pdf.setTextColor(249, 115, 22);
+    pdf.setFontSize(10); // ULTRA PETIT
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(creche.nom || 'E-Garderie', margin + 12, y + 5);
+    
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFontSize(6); // ULTRA PETIT
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(creche.adresse || 'Dakar, Sénégal', margin + 12, y + 8);
+    
+    y += 12; // ESPACEMENT MINIMAL
+    
+    // TITRE COMPACT
+    pdf.setDrawColor(249, 115, 22);
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, y, pageWidth - margin, y);
+    y += 3;
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(9); // PETIT
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('REÇU DE PAIEMENT', pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    
+    // SECTION ENFANT (si disponible) - ULTRA COMPACTE
+    if (enfant) {
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin, y, pageWidth - 2 * margin, 12, 'F');
+      
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(7); // TRÈS PETIT
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('ENFANT', margin + 2, y + 4);
+      
+      pdf.setFontSize(6);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`${enfant.prenom} ${enfant.nom}`, margin + 2, y + 7);
+      pdf.text(`N°: ${enfant.numeroInscription}`, margin + 2, y + 10);
+      
+      y += 14; // ESPACEMENT MINIMAL
     }
+    
+    // SECTION PAIEMENT - ULTRA COMPACTE
+    pdf.setFillColor(230, 240, 255);
+    pdf.rect(margin, y, pageWidth - 2 * margin, 16, 'F');
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(7);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('PAIEMENT', margin + 2, y + 4);
+    
+    pdf.setFontSize(6);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`${paiement.description}`, margin + 2, y + 7);
+    pdf.text(`Méthode: ${paiement.methodePaiement}`, margin + 2, y + 10);
+    
+    // Montant en orange - plus petit
+    pdf.setTextColor(249, 115, 22);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    const montant = paiement.montantPaye?.toLocaleString('fr-FR') || paiement.montant.toLocaleString('fr-FR');
+    pdf.text(`MONTANT: ${montant} XAF`, margin + 2, y + 13);
+    
+    y += 18; // ESPACEMENT MINIMAL
+    
+    // INFORMATIONS - ULTRA COMPACTES
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(6);
+    pdf.setFont('helvetica', 'normal');
+    const reference = paiement.reference || `REC-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`;
+    pdf.text(`Date: ${new Date(paiement.date).toLocaleDateString('fr-FR')}`, margin, y);
+    pdf.text(`Réf: ${reference}`, margin, y + 3);
+    
+    y += 8;
+    
+    // PIED DE PAGE MINIMAL
+    pdf.setDrawColor(200, 200, 200);
+    pdf.setLineWidth(0.3);
+    pdf.line(margin, y, pageWidth - margin, y);
+    y += 3;
+    
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFontSize(5); // MINIMAL
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(creche.nom || 'E-Garderie', pageWidth / 2, y, { align: 'center' });
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Reçu automatique', pageWidth / 2, y + 2, { align: 'center' });
+
+    // Download the PDF
+    const fileReference = enfant ? enfant.numeroInscription : paiement._id.substring(0, 8);
+    const fileName = `recu_${fileReference}_${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(fileName);
   };
 
   const getStatusColor = (statut: string) => {

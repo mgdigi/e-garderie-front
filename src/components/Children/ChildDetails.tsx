@@ -60,7 +60,7 @@ interface PaymentRecord {
   _id: string;
   enfantId: string;
   montant: number;
-  datePaiement: string;
+  date: string;
   type: string;
   categorie: string;
   statut: string;
@@ -81,20 +81,19 @@ export function ChildDetails({ childId, onClose }: ChildDetailsProps) {
     setLoading(true);
 
     try {
-      // Get child details from API
+    
       const childResponse = await apiService.getChild(childId);
       setChild(childResponse.data);
 
       console.log('Child details:', childResponse.data);
 
-      // Get attendance records for this child
-      const attendanceResponse = await apiService.getAttendance();
-      const childAttendance = attendanceResponse.data?.filter((att: AttendanceRecord) => att.enfantId === childId) || [];
+     
+      const attendanceResponse = await apiService.getAttendance({ enfantId: childId });
+      const childAttendance = attendanceResponse.data || [];
       setAttendance(childAttendance.slice(0, 10)); // Limit to 10 recent records
 
-      // Get payment records for this child
-      const paymentsResponse = await apiService.getPayments({ enfantId: childId });
-      const childPayments = paymentsResponse.data?.filter((pay: PaymentRecord) => pay.enfantId === childId) || [];
+      const paymentsResponse = await apiService.getChildPayments(childId);
+      const childPayments = paymentsResponse.data || [];
       setPayments(childPayments.slice(0, 10)); // Limit to 10 recent records
     } catch (error: any) {
       console.error('Error loading child details:', error);
@@ -264,7 +263,7 @@ export function ChildDetails({ childId, onClose }: ChildDetailsProps) {
                   <div key={payment._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900">
-                        {new Date(payment.datePaiement).toLocaleDateString('fr-FR', {
+                        {new Date(payment.date).toLocaleDateString('fr-FR', {
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric'
