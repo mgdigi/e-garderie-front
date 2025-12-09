@@ -65,9 +65,25 @@ export function Attendance() {
 
   useEffect(() => {
     if ((children.length > 0 && view === 'children') || (staff.length > 0 && view === 'staff')) {
+      // Charger les données pour la nouvelle date
       loadAttendance();
     }
   }, [selectedDate, view, children.length, staff.length]);
+  
+  // Nettoyer les données de markedPersons quand on change de date
+  useEffect(() => {
+    const currentKey = `${selectedDate}-${view}`;
+    setMarkedPersons(prev => {
+      const newMarked = { ...prev };
+      // Garder seulement les données pour la date actuelle
+      Object.keys(newMarked).forEach(key => {
+        if (key !== currentKey) {
+          delete newMarked[key];
+        }
+      });
+      return newMarked;
+    });
+  }, [selectedDate, view]);
 
   const loadChildren = async () => {
     try {
@@ -119,16 +135,21 @@ export function Attendance() {
 
   const loadAttendance = async () => {
     try {
-      const response = await apiService.getAttendance(selectedDate);
+      // Réinitialiser l'état avant de charger les nouvelles données
+      setAttendance({});
+      
+      console.log('Loading attendance for date:', selectedDate);
+      
+      // Passer un objet avec la date au lieu d'une string
+      const response = await apiService.getAttendance({ date: selectedDate });
       const attMap: Record<string, AttendanceRecord> = {};
       const marked: Set<string> = new Set();
 
-      console.log('Loading attendance for date:', selectedDate, 'response:', response.data);
+      console.log('Attendance response:', response.data);
 
       response.data?.forEach((att: AttendanceRecord) => {
         const personId = att.enfantId || att.personnelId;
         if (personId) {
-         
           const id = typeof personId === 'string' ? personId : (personId as any)._id;
           attMap[id] = att;
         
@@ -148,6 +169,8 @@ export function Attendance() {
       }));
     } catch (error) {
       console.error('Error loading attendance:', error);
+      // Réinitialiser l'état en cas d'erreur
+      setAttendance({});
     }
   };
 
@@ -244,12 +267,22 @@ export function Attendance() {
   //   }
   // };
 
+  // Calculer les statistiques en temps réel basées sur les données actuelles
   const currentList = view === 'children' ? children.flatMap(group => group.children) : staff;
   const currentAttendanceRecords = view === 'children'
     ? Object.values(attendance).filter(a => a.enfantId)
     : Object.values(attendance).filter(a => a.personnelId);
   const presentCount = currentAttendanceRecords.filter(a => a.statut === 'PRESENT').length;
   const absentCount = currentAttendanceRecords.filter(a => a.statut === 'ABSENT').length;
+  
+  // Log pour debug
+  console.log('Current attendance stats:', {
+    total: currentList.length,
+    present: presentCount,
+    absent: absentCount,
+    currentList: currentList.length,
+    attendanceRecords: currentAttendanceRecords.length
+  });
 
 
   if (loading) {

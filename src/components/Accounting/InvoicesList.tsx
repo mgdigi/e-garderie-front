@@ -9,61 +9,53 @@ const generatePDFFacture = async (factureData: any, enfant: any, creche: any) =>
 
 
   const receiptHTML = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ccc;">
-      <div style="display: flex; align-items: center; margin-bottom: 30px;">
-        <div style="flex-shrink: 0; margin-right: 20px;">
-          <img src="/images/logo.png" alt="Logo" style="width: 80px; height: 80px; object-fit: contain;" />
+    <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 10px; border: 1px solid #ccc;">
+      <div style="display: flex; align-items: center; margin-bottom: 8px;">
+        <div style="flex-shrink: 0; margin-right: 15px;">
+          <img src="/images/logo.png" alt="Logo" style="width: 40px; height: 40px; object-fit: contain;" />
         </div>
         <div style="text-align: left;">
-          <h1 style="color: #f97316; margin: 0; font-size: 24px;">${creche?.nom || 'Keur Cellé'}</h1>
-          <p style="margin: 5px 0; color: #666;">${creche?.adresse || 'Dakar, Sénégal'}</p>
-          <p style="margin: 5px 0; color: #666;">${creche?.telephone || '+221 XX XXX XX XX'}</p>
-          <p style="margin: 5px 0; color: #666;">${creche?.email || 'contact@e-garderie.sn'}</p>
+          <h1 style="color: #f97316; margin: 0; font-size: 16px;">${creche?.nom || 'Keur Cellé'}</h1>
+          <p style="margin: 2px 0; color: #666; font-size: 10px;">${creche?.adresse || 'Dakar, Sénégal'}</p>
+          <p style="margin: 2px 0; color: #666; font-size: 10px;">${creche?.telephone || '+221 XX XXX XX XX'}</p>
         </div>
       </div>
 
-      <div style="border-bottom: 2px solid #f97316; margin-bottom: 20px;"></div>
+      <div style="border-bottom: 1px solid #f97316; margin-bottom: 8px;"></div>
 
-      <h2 style="text-align: center; color: #333; margin-bottom: 30px;">FACTURE MENSUELLE</h2>
+      <h2 style="text-align: center; color: #333; margin-bottom: 10px; font-size: 14px;">FACTURE MENSUELLE</h2>
 
-      <div style="background: #f9f9f9; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-        <h3 style="margin: 0 0 10px 0; color: #333;">Cher(e) parent,</h3>
-        <p style="margin: 5px 0;">${factureData.messageParent}</p>
+      <div style="background: #f9f9f9; padding: 8px; margin-bottom: 8px; border-radius: 3px;">
+        <p style="margin: 2px 0; font-size: 10px;"><strong>Cher(e) parent,</strong></p>
+        <p style="margin: 2px 0; font-size: 9px;">${factureData.messageParent}</p>
       </div>
 
-      <div style="background: #f9f9f9; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-        <h3 style="margin: 0 0 10px 0; color: #333;">Informations de l'enfant</h3>
-        <p style="margin: 5px 0;"><strong>Nom:</strong> ${enfant.prenom} ${enfant.nom}</p>
-        <p style="margin: 5px 0;"><strong>Numéro d'inscription:</strong> ${enfant.numeroInscription}</p>
+      <div style="background: #f0f8ff; padding: 8px; margin-bottom: 8px; border-radius: 3px;">
+        <p style="margin: 2px 0; font-size: 9px;"><strong>Enfant:</strong> ${enfant.prenom} ${enfant.nom}</p>
+        <p style="margin: 2px 0; font-size: 9px;"><strong>N° Inscription:</strong> ${enfant.numeroInscription}</p>
       </div>
 
-      <div style="background: #f0f8ff; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
-        <h3 style="margin: 0 0 10px 0; color: #333;">Détails de la facture</h3>
-        <p style="margin: 5px 0;"><strong>Période:</strong> ${factureData.facture.periode}</p>
-        <p style="margin: 5px 0;"><strong>Type:</strong> ${factureData.facture.type}</p>
-        <p style="margin: 5px 0; font-size: 18px; font-weight: bold; color: #f97316;">
-          <strong>Montant à payer:</strong> ${factureData.facture.montant.toLocaleString('fr-FR')} XAF
+      <div style="background: #fff2e6; padding: 8px; margin-bottom: 8px; border-radius: 3px; border: 1px solid #f97316;">
+        <p style="margin: 2px 0; font-size: 9px;"><strong>Période:</strong> ${factureData.facture.periode}</p>
+        <p style="margin: 2px 0; font-size: 9px;"><strong>Type:</strong> ${factureData.facture.type}</p>
+        <p style="margin: 4px 0; font-size: 12px; font-weight: bold; color: #f97316;">
+          <strong>MONTANT: ${factureData.facture.montant.toLocaleString('fr-FR')} XAF</strong>
         </p>
       </div>
 
-      <div style="margin-bottom: 30px;">
-        <p><strong>Date d'échéance:</strong> ${factureData.facture.dateEcheance}</p>
-        <p><strong>Référence:</strong> ${factureData.facture.numero}</p>
-        <p><strong>Date de création:</strong> ${factureData.facture.dateCreation}</p>
+      <div style="margin-bottom: 8px; font-size: 9px;">
+        <p style="margin: 2px 0;"><strong>Échéance:</strong> ${factureData.facture.dateEcheance}</p>
+        <p style="margin: 2px 0;"><strong>Réf:</strong> ${factureData.facture.numero}</p>
       </div>
 
-      <div style="margin-bottom: 30px;">
-        <p><strong>Modes de paiement acceptés:</strong></p>
-        <p style="margin-left: 20px;">• Espèces</p>
-        <p style="margin-left: 20px;">• Paiement Mobile</p>
-        <p style="margin-left: 20px;">• Chèque</p>
+      <div style="font-size: 9px; margin-bottom: 8px;">
+        <p style="margin: 2px 0;"><strong>Paiements:</strong> Espèces • Mobile Money • Chèque</p>
       </div>
 
-      <div style="border-top: 1px solid #ccc; padding-top: 20px; text-align: center; color: #666; font-size: 12px;">
-        <p style="margin-bottom: 10px;"><strong>${creche?.nom || 'E-Garderie'}</strong></p>
-        <p style="margin-bottom: 5px;">${creche?.email || 'contact@e-garderie.sn'}</p>
-        <p>Ce document est généré automatiquement par le système E-Garderie</p>
-        <p>Conservez-le précieusement pour vos archives comptables.</p>
+      <div style="border-top: 1px solid #ccc; padding-top: 8px; text-align: center; color: #666; font-size: 8px;">
+        <p style="margin: 2px 0;"><strong>${creche?.nom || 'E-Garderie'}</strong></p>
+        <p style="margin: 2px 0;">${creche?.email || 'contact@e-garderie.sn'}</p>
+        <p style="margin: 2px 0;">Généré automatiquement</p>
       </div>
     </div>
   `;
@@ -87,28 +79,38 @@ const generatePDFFacture = async (factureData: any, enfant: any, creche: any) =>
       height: tempDiv.scrollHeight
     });
 
-    // Create PDF
+    // Create PDF - VERSION PLEINE PAGE
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
 
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 295; // A4 height in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-
-    let position = 0;
-
-    // Add first page
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    // Add additional pages if needed
-    while (heightLeft >= 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+    // Dimensions de la page A4
+    const pageWidth = 210; // A4 width in mm
+    const pageHeight = 297; // A4 height in mm
+    const margin = 5; // Marges minimales pour maximiser l'espace
+    
+    // Calculer les dimensions pour remplir la page
+    const availableWidth = pageWidth - (2 * margin);
+    const availableHeight = pageHeight - (2 * margin);
+    
+    // Calculer les dimensions optimales pour remplir l'espace
+    const aspectRatio = canvas.height / canvas.width;
+    
+    // Calculer la hauteur qui utilisera toute la largeur disponible
+    let imgWidth = availableWidth;
+    let imgHeight = imgWidth * aspectRatio;
+    
+    // Si la hauteur calculée dépasse l'espace disponible, ajuster par la hauteur
+    if (imgHeight > availableHeight) {
+      imgHeight = availableHeight;
+      imgWidth = imgHeight / aspectRatio;
     }
+    
+    // Centrer le contenu sur la page
+    const x = (pageWidth - imgWidth) / 2;
+    const y = (pageHeight - imgHeight) / 2;
+
+    // Ajouter sur une seule page en utilisant tout l'espace disponible
+    pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
 
     // Download the PDF
     const reference = enfant.numeroInscription || factureData.facture._id.substring(0, 8);
