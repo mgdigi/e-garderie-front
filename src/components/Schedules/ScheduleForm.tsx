@@ -83,6 +83,7 @@ export function ScheduleForm({ isOpen, onClose, onSave, classes, selectedClass, 
 
   const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
   const timeSlots = [
+    { start: '08:00', end: '08:30', label: '8h-8h 30' },
     { start: '08:30', end: '09:00', label: '8h 30 -9h' },
     { start: '09:00', end: '09:30', label: '9h-9h 30' },
     { start: '09:30', end: '10:00', label: '9h 30-10h' },
@@ -98,11 +99,6 @@ export function ScheduleForm({ isOpen, onClose, onSave, classes, selectedClass, 
     { start: '15:00', end: '15:30', label: '15h-15h 30' },
     { start: '15:30', end: '16:00', label: '15h 30-16h' },
     { start: '16:00', end: '16:30', label: '16h-16h 30' },
-
-
-
-
-
 
   ];
 
